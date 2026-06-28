@@ -12,7 +12,16 @@ import { Bus, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-re
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const portalType = searchParams.get('type');
+  const redirect =
+    searchParams.get('redirect') ||
+    (portalType === 'admin'
+      ? '/admin/dashboard'
+      : portalType === 'operator'
+        ? '/operator/dashboard'
+        : portalType === 'agent'
+          ? '/agent/dashboard'
+          : '/');
   const { signIn, loading: authLoading } = useAuth();
   const { t, language } = useLanguage();
 
