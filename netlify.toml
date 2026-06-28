@@ -4,3 +4,9 @@ publish = ".next"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+package = "netlify-plugin-bundle-env"
+
+  [plugins.inputs]
+  directories = ["."]
