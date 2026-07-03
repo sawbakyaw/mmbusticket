@@ -63,6 +63,13 @@ export default function HomePage() {
 
   const fetchData = async () => {
     try {
+      // Check if Supabase is configured
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.warn('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.');
+        setLoading(false);
+        return;
+      }
+
       // Get operators with logos
       const { data: operatorsData } = await supabase
         .from('operators')
