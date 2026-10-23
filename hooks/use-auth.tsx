@@ -131,7 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (state.loading) return;
 
-    const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
+    const isPublicRoute = publicRoutes.some(route =>
+      route === '/' ? pathname === '/' : pathname === route || pathname?.startsWith(`${route}/`)
+    );
     const isAuthRoute = authRoutes.some(route => pathname === route);
 
     // If trying to access protected route without auth
@@ -142,22 +144,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // If authenticated and trying to access auth routes
     if (state.user && isAuthRoute) {
-      router.push('/dashboard');
+      const dashboard = ['super_admin', 'admin'].includes(state.user.role)
+        ? '/admin/dashboard'
+        : ['operator_admin', 'operator_staff'].includes(state.user.role)
+          ? '/operator/dashboard'
+          : ['agent_admin', 'agent_staff'].includes(state.user.role)
+            ? '/agent/dashboard'
+            : '/';
+      router.push(dashboard);
       return;
     }
 
     // Check role-based access for admin/operator/agent portals
     if (state.user) {
       if (pathname?.startsWith('/admin') && !hasRoleAccess(state.user.role, ['super_admin', 'admin'])) {
-        router.push('/unauthorized');
+        router.push('/');
         return;
       }
       if (pathname?.startsWith('/operator') && !hasRoleAccess(state.user.role, ['super_admin', 'admin', 'operator_admin', 'operator_staff'])) {
-        router.push('/unauthorized');
+        router.push('/');
         return;
       }
       if (pathname?.startsWith('/agent') && !hasRoleAccess(state.user.role, ['super_admin', 'admin', 'agent_admin', 'agent_staff'])) {
-        router.push('/unauthorized');
+        router.push('/');
         return;
       }
     }

@@ -202,6 +202,8 @@ function SearchResults() {
             initialFrom={from}
             initialTo={to}
             initialDate={date}
+            initialSeats={seats}
+            initialForeigner={isForeigner}
             compact
           />
         </div>

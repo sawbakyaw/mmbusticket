@@ -12,16 +12,18 @@ interface SearchFormProps {
   initialFrom?: string;
   initialTo?: string;
   initialDate?: string;
+  initialSeats?: number;
+  initialForeigner?: boolean;
   compact?: boolean;
 }
 
-export function SearchForm({ initialFrom, initialTo, initialDate, compact = false }: SearchFormProps) {
+export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats = 1, initialForeigner = false, compact = false }: SearchFormProps) {
   const router = useRouter();
   const { t, language } = useLanguage();
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isForeigner, setIsForeigner] = useState(false);
-  const [numberOfSeats, setNumberOfSeats] = useState(1);
+  const [isForeigner, setIsForeigner] = useState(initialForeigner);
+  const [numberOfSeats, setNumberOfSeats] = useState(initialSeats);
 
   const [fromCity, setFromCity] = useState(initialFrom || '');
   const [toCity, setToCity] = useState(initialTo || '');
