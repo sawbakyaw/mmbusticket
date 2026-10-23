@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
+import { useAuth } from '@/hooks/use-auth';
 import { OperatorLayout } from '@/components/operator-layout';
 import {
   TrendingUp, TrendingDown, Users, Bus, Ticket, DollarSign,
@@ -26,22 +27,17 @@ export default function OperatorDashboardPage() {
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [upcomingTrips, setUpcomingTrips] = useState<any[]>([]);
   const [operatorId, setOperatorId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchOperatorData();
-  }, []);
+  }, [user?.operatorId]);
 
   const fetchOperatorData = async () => {
     try {
-      // Get operator associated with current user
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('operator_id')
-        .single();
-
-      if (userProfile?.operator_id) {
-        setOperatorId(userProfile.operator_id);
-        await fetchStats(userProfile.operator_id);
+      if (user?.operatorId) {
+        setOperatorId(user.operatorId);
+        await fetchStats(user.operatorId);
       }
     } catch (error) {
       console.error('Error fetching operator data:', error);
@@ -56,19 +52,19 @@ export default function OperatorDashboardPage() {
       today.setHours(0, 0, 0, 0);
 
       // Get buses count
-      const { count: busesCount } = await supabase
+      const { count: busesCount } = await database
         .from('buses')
         .select('*', { count: 'exact', head: true })
         .eq('operator_id', opId);
 
       // Get trips count
-      const { data: trips } = await supabase
+      const { data: trips } = await database
         .from('trips')
         .select('*')
         .eq('operator_id', opId);
 
       // Get bookings
-      const { data: bookings } = await supabase
+      const { data: bookings } = await database
         .from('bookings')
         .select('*')
         .eq('operator_id', opId)

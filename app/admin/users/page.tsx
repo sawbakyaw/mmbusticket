@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { UserProfile, Role } from '@/lib/types-extended';
 import { Search, UserPlus, MoreVertical, Shield, Edit2, Trash2, Mail, Phone } from 'lucide-react';
@@ -21,7 +21,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('user_profiles')
         .select(`
           *,
@@ -39,7 +39,7 @@ export default function UsersPage() {
   };
 
   const fetchRoles = async () => {
-    const { data } = await supabase.from('roles').select('*').order('level', { ascending: false });
+    const { data } = await database.from('roles').select('*').order('level', { ascending: false });
     setRoles(data || []);
   };
 

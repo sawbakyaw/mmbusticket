@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MapPin, ArrowRight, ArrowLeftRight, Search, Globe } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { City } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { format } from 'date-fns';
@@ -35,7 +35,7 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
   useEffect(() => {
     async function fetchCities() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await database
           .from('cities')
           .select('*')
           .order('is_popular', { ascending: false })

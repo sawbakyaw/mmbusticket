@@ -1,4 +1,4 @@
-import { Database } from './supabase';
+import { Database } from './db-client';
 
 export type City = Database['public']['Tables']['cities']['Row'];
 export type Operator = Database['public']['Tables']['operators']['Row'];

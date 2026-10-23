@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
+import { useAuth } from '@/hooks/use-auth';
 import { AgentLayout } from '@/components/agent-layout';
 import {
   TrendingUp, Bus, Ticket, DollarSign,
@@ -23,21 +24,17 @@ export default function AgentDashboardPage() {
   const [stats, setStats] = useState<AgentStats | null>(null);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [agentId, setAgentId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAgentData();
-  }, []);
+  }, [user?.agentId]);
 
   const fetchAgentData = async () => {
     try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('agent_id')
-        .single();
-
-      if (userProfile?.agent_id) {
-        setAgentId(userProfile.agent_id);
-        await fetchStats(userProfile.agent_id);
+      if (user?.agentId) {
+        setAgentId(user.agentId);
+        await fetchStats(user.agentId);
       }
     } catch (error) {
       console.error('Error fetching agent data:', error);
@@ -51,17 +48,17 @@ export default function AgentDashboardPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const { data: bookings } = await supabase
+      const { data: bookings } = await database
         .from('bookings')
         .select('*')
         .eq('agent_id', agId)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      const { data: wallet } = await supabase
+      const { data: wallet } = await database
         .from('wallets')
         .select('*')
-        .eq('owner_id', agId)
+        .eq('agent_id', agId)
         .single();
 
       const totalCommission = bookings?.reduce((sum, b) => sum + Number(b.agent_commission || 0), 0) || 0;

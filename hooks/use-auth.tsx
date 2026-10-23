@@ -1,9 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Session, User } from '@supabase/supabase-js';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AuthUser, AuthState, SystemRole, UserProfile, Role, Wallet } from '@/lib/types-extended';
 
 interface AuthContextType extends AuthState {
@@ -31,55 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
 
-  // Fetch user profile and wallet
   const fetchUserData = useCallback(async (userId: string): Promise<AuthUser | null> => {
     try {
-      // Fetch profile with role
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select(`
-          *,
-          roles (*)
-        `)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-
-      // Fetch wallet
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      // Check if operator user
-      const { data: operatorUser } = await supabase
-        .from('operator_users')
-        .select('operator_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      // Check if agent user
-      const { data: agentUser } = await supabase
-        .from('agent_users')
-        .select('agent_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      // Get role from profile or default to customer
-      const role = (profile?.roles as Role)?.name || 'customer';
-
-      return {
-        id: userId,
-        email: '', // Will be filled from auth user
-        phone: null,
-        role: role as SystemRole,
-        profile: profile || null,
-        wallet: wallet || null,
-        operatorId: operatorUser?.operator_id,
-        agentId: agentUser?.agent_id,
-      };
+      const { data: { session } } = await database.auth.getSession();
+      return session?.user?.id === userId ? session.user as AuthUser : null;
     } catch (error) {
       console.error('Error fetching user data:', error);
       return null;
@@ -90,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await database.auth.getSession();
 
         if (session?.user) {
           const userData = await fetchUserData(session.user.id);
@@ -111,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = database.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const userData = await fetchUserData(session.user.id);
         if (userData) {
@@ -180,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign up
   const signUp = async (email: string, password: string, name: string, phone: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await database.auth.signUp({
         email,
         password,
         options: {
@@ -195,41 +149,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error.message };
       }
 
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            user_id: data.user.id,
-          });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
-
-        // Create wallet for customer
-        const { data: roleData } = await supabase
-          .from('roles')
-          .select('id')
-          .eq('name', 'customer')
-          .maybeSingle();
-
-        if (roleData) {
-          await supabase
-            .from('user_profiles')
-            .update({ role_id: roleData.id })
-            .eq('user_id', data.user.id);
-        }
-
-        // Create wallet
-        await supabase
-          .from('wallets')
-          .insert({
-            user_id: data.user.id,
-            wallet_type: 'user',
-          });
-      }
-
       return { error: null };
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -239,25 +158,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await database.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         return { error: error.message };
-      }
-
-      // Update last login
-      if (data.user) {
-        await supabase
-          .from('user_profiles')
-          .update({
-            last_login_at: new Date().toISOString(),
-            last_login_ip: '', // Would need server action for real IP
-            failed_login_attempts: 0,
-          })
-          .eq('user_id', data.user.id);
       }
 
       return { error: null };
@@ -268,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await database.auth.signOut();
     setState({ user: null, loading: false, error: null });
     router.push('/');
   };

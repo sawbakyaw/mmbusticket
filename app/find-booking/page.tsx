@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
 import { Booking } from '@/lib/types';
 import {
   Search, Ticket, AlertCircle, Bus, MapPin, Clock,
@@ -14,8 +12,6 @@ import {
 import { format } from 'date-fns';
 
 export default function FindBookingPage() {
-  const router = useRouter();
-  const [searchType, setSearchType] = useState<'reference' | 'phone'>('reference');
   const [searchValue, setSearchValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -30,30 +26,18 @@ export default function FindBookingPage() {
     setBookings([]);
 
     try {
-      let query;
+      const response = await fetch('/api/bookings/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: searchValue.trim().toUpperCase() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Search failed');
 
-      if (searchType === 'reference') {
-        query = supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', searchValue.trim().toUpperCase());
+      if (!result.bookings?.length) {
+        setError('No booking found. Please check your booking reference and try again.');
       } else {
-        query = supabase
-          .from('bookings')
-          .select('*')
-          .eq('passenger_phone', searchValue.trim())
-          .order('booked_at', { ascending: false })
-          .limit(5);
-      }
-
-      const { data, error: err } = await query;
-
-      if (err) throw err;
-
-      if (!data || data.length === 0) {
-        setError('No bookings found. Please check your information and try again.');
-      } else {
-        setBookings(data);
+        setBookings(result.bookings);
       }
     } catch (err) {
       console.error('Search error:', err);
@@ -78,42 +62,8 @@ export default function FindBookingPage() {
             <Ticket className="h-16 w-16 text-teal-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-white mb-3">Find Your Booking</h1>
             <p className="text-slate-400">
-              Retrieve your e-ticket using your booking reference or phone number
+              Retrieve your e-ticket using the booking reference from your confirmation
             </p>
-          </div>
-
-          {/* Search Type Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => {
-                setSearchType('reference');
-                setSearchValue('');
-                setError(null);
-                setBookings([]);
-              }}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                searchType === 'reference'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              By Reference
-            </button>
-            <button
-              onClick={() => {
-                setSearchType('phone');
-                setSearchValue('');
-                setError(null);
-                setBookings([]);
-              }}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                searchType === 'phone'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              By Phone
-            </button>
           </div>
 
           {/* Search Form */}
@@ -122,13 +72,13 @@ export default function FindBookingPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    {searchType === 'reference' ? 'Booking Reference' : 'Phone Number'}
+                    Booking Reference
                   </label>
                   <input
                     type="text"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={searchType === 'reference' ? 'MMT-XXXXXXXX' : '09 123 456 789'}
+                    placeholder="MMB-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                     className="w-full input-dark rounded-xl px-4 py-3 text-lg"
                     required
                   />

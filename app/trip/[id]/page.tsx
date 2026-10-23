@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Trip, Seat, Operator, Bus as BusType, City, Route, SeatLock } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -60,7 +60,7 @@ function SeatSelectionPage() {
       setLoading(true);
       try {
         // Fetch trip with details
-        const { data: tripData, error: tripError } = await supabase
+        const { data: tripData, error: tripError } = await database
           .from('trips')
           .select(`
             *,
@@ -83,7 +83,7 @@ function SeatSelectionPage() {
 
         // Fetch cities
         const route = tripData.routes as any;
-        const { data: cities } = await supabase
+        const { data: cities } = await database
           .from('cities')
           .select('*')
           .in('id', [route.from_city_id, route.to_city_id]);
@@ -100,7 +100,7 @@ function SeatSelectionPage() {
         });
 
         // Fetch seats
-        const { data: seatsData } = await supabase
+        const { data: seatsData } = await database
           .from('seats')
           .select('*')
           .eq('trip_id', tripId)
@@ -119,62 +119,26 @@ function SeatSelectionPage() {
     fetchData();
   }, [tripId]);
 
-  // Subscribe to real-time seat updates
   useEffect(() => {
     if (!tripId) return;
-
-    // Clean expired locks on mount
-    supabase.rpc('clean_expired_locks').then(() => {});
-
-    const channel = supabase
-      .channel(`seats-${tripId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'seats',
-          filter: `trip_id=eq.${tripId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'UPDATE') {
-            setSeats((prev) =>
-              prev.map((s) =>
-                s.id === payload.new.id ? { ...s, ...payload.new } : s
-              )
-            );
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'seat_locks',
-          filter: `trip_id=eq.${tripId}`,
-        },
-        () => {
-          // Refetch seat locks on any change
-          fetchSeatLocks();
-        }
-      )
-      .subscribe();
-
-    // Periodically clean expired locks
-    const interval = setInterval(() => {
-      supabase.rpc('clean_expired_locks');
-    }, 30000);
-
+    const refreshSeats = async () => {
+      const { data: seatData } = await database.from('seats').select('*').eq('trip_id', tripId).order('row_number').order('column_number');
+      const { data: lockData } = await database.from('seat_locks').select('*').eq('trip_id', tripId).gt('expires_at', new Date().toISOString());
+      setSeats(seatData || []);
+      setSeatLocks(lockData || []);
+    };
+    void database.rpc('clean_expired_locks');
+    const refreshInterval = setInterval(refreshSeats, 3000);
+    const cleanupInterval = setInterval(() => { void database.rpc('clean_expired_locks'); }, 30000);
     return () => {
-      supabase.removeChannel(channel);
-      clearInterval(interval);
+      clearInterval(refreshInterval);
+      clearInterval(cleanupInterval);
     };
   }, [tripId]);
 
   // Fetch seat locks
   const fetchSeatLocks = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await database
       .from('seat_locks')
       .select('*')
       .eq('trip_id', tripId)
@@ -194,61 +158,25 @@ function SeatSelectionPage() {
     setError(null);
 
     try {
-      // Check if seat is already locked by someone else
-      const { data: existingLock } = await supabase
-        .from('seat_locks')
-        .select('*')
-        .eq('seat_id', seat.id)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-
-      if (existingLock && existingLock.session_id !== sessionId) {
-        setError('This seat was just locked by another user');
-        setLockingSeat(null);
-        return;
-      }
-
-      // If already selected, deselect
       if (selectedSeats.find(s => s.id === seat.id)) {
-        // Remove lock
-        await supabase
-          .from('seat_locks')
-          .delete()
-          .eq('seat_id', seat.id)
-          .eq('session_id', sessionId);
-
-        // Update seat status
-        await supabase
-          .from('seats')
-          .update({ status: 'available' })
-          .eq('id', seat.id);
-
+        const response = await fetch('/api/seats/unlock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seatId: seat.id, sessionId }),
+        });
+        if (!response.ok) throw new Error('Failed to release seat');
         setSelectedSeats(prev => prev.filter(s => s.id !== seat.id));
         setLockingSeat(null);
         return;
       }
 
-      // Create lock (10 minutes expiry)
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      const { error: lockError } = await supabase
-        .from('seat_locks')
-        .insert({
-          seat_id: seat.id,
-          trip_id: tripId,
-          session_id: sessionId,
-          expires_at: expiresAt.toISOString(),
-        });
-
-      if (lockError) {
-        throw new Error('Failed to lock seat');
-      }
-
-      // Update seat status
-      await supabase
-        .from('seats')
-        .update({ status: 'locked' })
-        .eq('id', seat.id);
-
+      const response = await fetch('/api/seats/lock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seatId: seat.id, tripId, sessionId }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to reserve seat');
       setSelectedSeats(prev => [...prev, seat]);
     } catch (err) {
       console.error('Error locking seat:', err);
@@ -279,7 +207,7 @@ function SeatSelectionPage() {
   // Helper to check if seat is locked by someone else
   const isLockedByOther = (seat: Seat) => {
     const lock = seatLocks.find(l => l.seat_id === seat.id);
-    return lock && lock.session_id !== sessionId;
+    return Boolean(lock && !isLockedByMe(seat));
   };
 
   const formatPrice = (price: number) => {

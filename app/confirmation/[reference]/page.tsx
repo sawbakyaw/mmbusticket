@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Booking, Trip, Operator, City, Bus as BusType } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -34,49 +34,22 @@ function ConfirmationPage() {
     async function fetchBooking() {
       setLoading(true);
       try {
-        const { data } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', bookingReference)
-          .maybeSingle();
-
+        const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}`);
+        const result = await response.json();
+        const data = result.booking;
         if (!data) {
           router.push('/');
           return;
         }
-
         setBooking(data);
-
-        // Fetch trip with all details
-        if (data.trip_id) {
-          const { data: tripData } = await supabase
-            .from('trips')
-            .select(`
-              *,
-              operators (*),
-              buses (*)
-            `)
-            .eq('id', data.trip_id)
-            .maybeSingle();
-
-          if (tripData && tripData.routes) {
-            const route = tripData.routes as any;
-            const { data: cities } = await supabase
-              .from('cities')
-              .select('*')
-              .in('id', [route.from_city_id, route.to_city_id]);
-
-            const fromCity = cities?.find(c => c.id === route.from_city_id);
-            const toCity = cities?.find(c => c.id === route.to_city_id);
-
-            setTrip({
-              ...tripData,
-              operators: tripData.operators as Operator,
-              buses: tripData.buses as BusType,
-              fromCity: fromCity!,
-              toCity: toCity!,
-            } as TripWithDetails);
-          }
+        if (result.trip?.routes) {
+          setTrip({
+            ...result.trip,
+            operators: result.trip.operators as Operator,
+            buses: result.trip.buses as BusType,
+            fromCity: result.trip.routes.from_city,
+            toCity: result.trip.routes.to_city,
+          } as TripWithDetails);
         }
       } catch (err) {
         console.error('Error fetching booking:', err);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import {
   Search, Clock, CheckCircle, XCircle, AlertTriangle,
@@ -30,7 +30,7 @@ export default function RefundsPage() {
 
   const fetchRefunds = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('refund_requests')
         .select(`
           *,
@@ -73,7 +73,7 @@ export default function RefundsPage() {
     setProcessing(true);
     try {
       const newStatus = action === 'approve' ? 'approved' : 'rejected';
-      const { error } = await supabase
+      const { error } = await database
         .from('refund_requests')
         .update({
           status: newStatus,

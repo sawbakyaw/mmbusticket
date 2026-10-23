@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Trip, Operator, Bus as BusType, City } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -51,7 +51,7 @@ function PassengerFormPage() {
       setLoading(true);
       try {
         // Fetch trip with details
-        const { data: tripData } = await supabase
+        const { data: tripData } = await database
           .from('trips')
           .select(`
             *,
@@ -73,7 +73,7 @@ function PassengerFormPage() {
 
         // Fetch cities
         const route = tripData.routes as any;
-        const { data: cities } = await supabase
+        const { data: cities } = await database
           .from('cities')
           .select('*')
           .in('id', [route.from_city_id, route.to_city_id]);
@@ -146,50 +146,24 @@ function PassengerFormPage() {
     setSubmitting(true);
 
     try {
-      // Create booking
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert({
-          trip_id: tripId,
-          passenger_name: passengerName,
-          passenger_phone: passengerPhone,
-          passenger_email: passengerEmail || null,
-          passenger_nrc: passengerNrc || null,
-          seat_numbers: selectedSeats,
-          total_amount: totalPrice,
-          payment_method: 'pending',
-          payment_status: 'pending',
-          is_foreigner: isForeigner,
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tripId,
+          sessionId,
+          seatNumbers: selectedSeats,
+          passengerName,
+          passengerPhone,
+          passengerEmail: passengerEmail || null,
+          passengerNrc: passengerNrc || null,
+          isForeigner,
           notes: notes || null,
-        })
-        .select()
-        .single();
-
-      if (bookingError) throw bookingError;
-
-      // Update seat statuses to booked
-      const { data: seatsData } = await supabase
-        .from('seats')
-        .select('id')
-        .eq('trip_id', tripId)
-        .in('seat_number', selectedSeats);
-
-      if (seatsData) {
-        await supabase
-          .from('seats')
-          .update({ status: 'booked' })
-          .in('id', seatsData.map(s => s.id));
-
-        // Remove locks
-        await supabase
-          .from('seat_locks')
-          .delete()
-          .eq('trip_id', tripId)
-          .eq('session_id', sessionId);
-      }
-
-      // Navigate to payment page
-      router.push(`/payment/${booking.booking_reference}`);
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to create booking');
+      router.push(`/payment/${result.booking.booking_reference}`);
     } catch (err) {
       console.error('Error creating booking:', err);
       setErrors({ submit: 'Failed to create booking. Please try again.' });

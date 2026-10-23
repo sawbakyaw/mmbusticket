@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { NotificationTemplate, Notification } from '@/lib/types-extended';
 import {
@@ -40,12 +40,12 @@ export default function NotificationsPage() {
 
   const fetchData = async () => {
     try {
-      const { data: templatesData } = await supabase
+      const { data: templatesData } = await database
         .from('notification_templates')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const { data: notificationsData } = await supabase
+      const { data: notificationsData } = await database
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false })

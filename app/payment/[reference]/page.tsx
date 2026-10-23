@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
 import { Booking, Trip } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -38,35 +37,14 @@ function PaymentPage() {
     async function fetchBooking() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', bookingReference)
-          .maybeSingle();
-
-        if (error || !data) {
+        const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}`);
+        const result = await response.json();
+        if (!response.ok || !result.booking) {
           router.push('/');
           return;
         }
-
-        setBooking(data);
-
-        // Fetch trip details
-        if (data.trip_id) {
-          const { data: tripData } = await supabase
-            .from('trips')
-            .select(`
-              *,
-              operators (*),
-              routes (
-                from_city_id,
-                to_city_id
-              )
-            `)
-            .eq('id', data.trip_id)
-            .maybeSingle();
-          setTrip(tripData);
-        }
+        setBooking(result.booking);
+        setTrip(result.trip);
       } catch (err) {
         console.error('Error fetching booking:', err);
       } finally {
@@ -82,26 +60,15 @@ function PaymentPage() {
 
     setProcessing(true);
 
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Update booking status
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        payment_method: selectedPayment,
-        payment_status: 'paid',
-        payment_reference: `PAY-${Date.now()}`,
-      })
-      .eq('id', booking.id);
-
-    if (error) {
-      console.error('Error updating booking:', error);
+    const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentMethod: selectedPayment }),
+    });
+    if (!response.ok) {
       setProcessing(false);
       return;
     }
-
-    // Navigate to confirmation
     router.push(`/confirmation/${bookingReference}`);
   };
 
@@ -189,7 +156,7 @@ function PaymentPage() {
                 <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                   <h4 className="font-medium text-white mb-2">Payment Instructions</h4>
                   <p className="text-sm text-slate-400">
-                    Click "Complete Payment" to simulate payment processing. In production, you would be redirected to {paymentMethods.find(m => m.id === selectedPayment)?.name} to complete the transaction securely.
+                    Payment methods are not connected yet. Choosing one records your preference but does not charge you or confirm payment.
                   </p>
                 </div>
               )}
@@ -207,7 +174,7 @@ function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="h-5 w-5" />
-                    Complete Payment
+                    Save Payment Preference
                   </>
                 )}
               </button>
@@ -274,7 +241,7 @@ function PaymentPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 text-center">
-                  This is a demo. No actual payment will be processed.
+                  Payment remains pending until a payment provider is integrated and confirms it.
                 </p>
               </div>
             </div>
