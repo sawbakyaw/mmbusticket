@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
 import { Booking, Trip } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -31,6 +30,8 @@ function PaymentPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>('');
+  const [transactionRef, setTransactionRef] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -38,35 +39,14 @@ function PaymentPage() {
     async function fetchBooking() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', bookingReference)
-          .maybeSingle();
-
-        if (error || !data) {
+        const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}`);
+        const result = await response.json();
+        if (!response.ok || !result.booking) {
           router.push('/');
           return;
         }
-
-        setBooking(data);
-
-        // Fetch trip details
-        if (data.trip_id) {
-          const { data: tripData } = await supabase
-            .from('trips')
-            .select(`
-              *,
-              operators (*),
-              routes (
-                from_city_id,
-                to_city_id
-              )
-            `)
-            .eq('id', data.trip_id)
-            .maybeSingle();
-          setTrip(tripData);
-        }
+        setBooking(result.booking);
+        setTrip(result.trip);
       } catch (err) {
         console.error('Error fetching booking:', err);
       } finally {
@@ -78,31 +58,24 @@ function PaymentPage() {
   }, [bookingReference, router]);
 
   const handlePayment = async () => {
-    if (!selectedPayment || !booking) return;
+    if (!selectedPayment || !transactionRef.trim() || !booking) return;
 
     setProcessing(true);
-
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Update booking status
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        payment_method: selectedPayment,
-        payment_status: 'paid',
-        payment_reference: `PAY-${Date.now()}`,
-      })
-      .eq('id', booking.id);
-
-    if (error) {
-      console.error('Error updating booking:', error);
+    setPaymentError(null);
+    try {
+      const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod: selectedPayment, transactionRef: transactionRef.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to submit payment');
+      router.push(`/confirmation/${bookingReference}`);
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Unable to submit payment');
+    } finally {
       setProcessing(false);
-      return;
     }
-
-    // Navigate to confirmation
-    router.push(`/confirmation/${bookingReference}`);
   };
 
   const copyReference = () => {
@@ -189,14 +162,25 @@ function PaymentPage() {
                 <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                   <h4 className="font-medium text-white mb-2">Payment Instructions</h4>
                   <p className="text-sm text-slate-400">
-                    Click "Complete Payment" to simulate payment processing. In production, you would be redirected to {paymentMethods.find(m => m.id === selectedPayment)?.name} to complete the transaction securely.
+                    Enter the transaction reference from your transfer. Payment stays pending until an administrator verifies it.
                   </p>
+                  <label className="block text-sm text-slate-300 mt-4" htmlFor="transaction-reference">Transaction reference</label>
+                  <input
+                    id="transaction-reference"
+                    value={transactionRef}
+                    onChange={(event) => setTransactionRef(event.target.value)}
+                    maxLength={120}
+                    required
+                    className="w-full input-dark rounded-lg px-3 py-2 mt-2"
+                    placeholder="Enter transfer reference"
+                  />
                 </div>
               )}
+              {paymentError && <p role="alert" className="text-sm text-red-400 mt-4">{paymentError}</p>}
 
               <button
                 onClick={handlePayment}
-                disabled={!selectedPayment || processing}
+                disabled={!selectedPayment || !transactionRef.trim() || processing}
                 className="w-full btn-primary py-4 rounded-xl text-lg font-semibold mt-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? (
@@ -207,7 +191,7 @@ function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="h-5 w-5" />
-                    Complete Payment
+                    Save Payment Preference
                   </>
                 )}
               </button>
@@ -274,7 +258,7 @@ function PaymentPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 text-center">
-                  This is a demo. No actual payment will be processed.
+                  Payment remains pending until a payment provider is integrated and confirms it.
                 </p>
               </div>
             </div>

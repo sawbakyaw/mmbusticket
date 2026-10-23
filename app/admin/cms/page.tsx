@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import {
   Search, Plus, Edit2, Trash2, FileText, Globe, Settings,
@@ -29,12 +29,12 @@ export default function CMSPage() {
 
   const fetchData = async () => {
     try {
-      const { data: pagesData } = await supabase
+      const { data: pagesData } = await database
         .from('cms_pages')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const { data: settingsData } = await supabase
+      const { data: settingsData } = await database
         .from('cms_settings')
         .select('*');
 

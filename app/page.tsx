@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { SearchForm } from '@/components/search-form';
@@ -64,14 +64,14 @@ export default function HomePage() {
   const fetchData = async () => {
     try {
       // Get operators with logos
-      const { data: operatorsData } = await supabase
+      const { data: operatorsData } = await database
         .from('operators')
         .select('id, name, logo_url')
         .eq('is_active', true)
         .limit(30);
 
       // Get popular routes with trips
-      const { data: tripsData } = await supabase
+      const { data: tripsData } = await database
         .from('trips')
         .select(`
           id,

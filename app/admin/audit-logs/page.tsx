@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { AuditLog } from '@/lib/types-extended';
 import {
@@ -46,7 +46,7 @@ export default function AuditLogsPage() {
 
   const fetchLogs = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })

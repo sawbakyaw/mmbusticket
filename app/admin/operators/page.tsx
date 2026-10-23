@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { Operator, Bus, Trip } from '@/lib/types';
 import { Search, Plus, Edit2, Trash2, Bus as BusIcon, Users, Calendar, DollarSign, Eye } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function OperatorsPage() {
 
   const fetchOperators = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('operators')
         .select('*')
         .order('created_at', { ascending: false });
@@ -31,12 +31,12 @@ export default function OperatorsPage() {
 
       // Fetch stats for each operator
       for (const op of data || []) {
-        const { count: busesCount } = await supabase
+        const { count: busesCount } = await database
           .from('buses')
           .select('*', { count: 'exact', head: true })
           .eq('operator_id', op.id);
 
-        const { count: tripsCount } = await supabase
+        const { count: tripsCount } = await database
           .from('trips')
           .select('*', { count: 'exact', head: true })
           .eq('operator_id', op.id);

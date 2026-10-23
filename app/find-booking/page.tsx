@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
 import { Booking } from '@/lib/types';
 import {
   Search, Ticket, AlertCircle, Bus, MapPin, Clock,
@@ -14,50 +12,37 @@ import {
 import { format } from 'date-fns';
 
 export default function FindBookingPage() {
-  const router = useRouter();
-  const [searchType, setSearchType] = useState<'reference' | 'phone'>('reference');
   const [searchValue, setSearchValue] = useState('');
+  const [verificationPhone, setVerificationPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchValue.trim()) return;
+    if (!searchValue.trim() || !verificationPhone.trim()) return;
 
     setLoading(true);
     setError(null);
     setBookings([]);
 
     try {
-      let query;
+      const response = await fetch('/api/bookings/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: searchValue.trim().toUpperCase(), phone: verificationPhone.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Search failed');
 
-      if (searchType === 'reference') {
-        query = supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', searchValue.trim().toUpperCase());
+      if (!result.bookings?.length) {
+        setError('No booking found. Please check your booking reference and try again.');
       } else {
-        query = supabase
-          .from('bookings')
-          .select('*')
-          .eq('passenger_phone', searchValue.trim())
-          .order('booked_at', { ascending: false })
-          .limit(5);
-      }
-
-      const { data, error: err } = await query;
-
-      if (err) throw err;
-
-      if (!data || data.length === 0) {
-        setError('No bookings found. Please check your information and try again.');
-      } else {
-        setBookings(data);
+        setBookings(result.bookings);
       }
     } catch (err) {
       console.error('Search error:', err);
-      setError('Failed to search. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to search. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -78,42 +63,8 @@ export default function FindBookingPage() {
             <Ticket className="h-16 w-16 text-teal-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-white mb-3">Find Your Booking</h1>
             <p className="text-slate-400">
-              Retrieve your e-ticket using your booking reference or phone number
+              Verify the booking reference with the passenger phone number
             </p>
-          </div>
-
-          {/* Search Type Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => {
-                setSearchType('reference');
-                setSearchValue('');
-                setError(null);
-                setBookings([]);
-              }}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                searchType === 'reference'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              By Reference
-            </button>
-            <button
-              onClick={() => {
-                setSearchType('phone');
-                setSearchValue('');
-                setError(null);
-                setBookings([]);
-              }}
-              className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                searchType === 'phone'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              By Phone
-            </button>
           </div>
 
           {/* Search Form */}
@@ -122,13 +73,27 @@ export default function FindBookingPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    {searchType === 'reference' ? 'Booking Reference' : 'Phone Number'}
+                    Booking Reference
                   </label>
                   <input
                     type="text"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    placeholder={searchType === 'reference' ? 'MMT-XXXXXXXX' : '09 123 456 789'}
+                    placeholder="MMB-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    className="w-full input-dark rounded-xl px-4 py-3 text-lg"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="verification-phone">
+                    Passenger Phone Number
+                  </label>
+                  <input
+                    id="verification-phone"
+                    type="tel"
+                    value={verificationPhone}
+                    onChange={(e) => setVerificationPhone(e.target.value)}
+                    placeholder="09 123 456 789"
                     className="w-full input-dark rounded-xl px-4 py-3 text-lg"
                     required
                   />
@@ -136,7 +101,7 @@ export default function FindBookingPage() {
 
                 <button
                   type="submit"
-                  disabled={loading || !searchValue.trim()}
+                  disabled={loading || !searchValue.trim() || !verificationPhone.trim()}
                   className="w-full btn-primary py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
@@ -187,9 +152,11 @@ export default function FindBookingPage() {
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                       booking.payment_status === 'paid'
                         ? 'bg-teal-500/20 text-teal-400'
-                        : 'bg-amber-500/20 text-amber-400'
+                        : booking.payment_status === 'failed'
+                          ? 'bg-red-500/20 text-red-400'
+                          : 'bg-amber-500/20 text-amber-400'
                     }`}>
-                      {booking.payment_status === 'paid' ? 'Confirmed' : 'Pending'}
+                      {booking.payment_status === 'paid' ? 'Confirmed' : booking.payment_status === 'failed' ? 'Payment rejected' : 'Pending verification'}
                     </div>
                   </div>
 

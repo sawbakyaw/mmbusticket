@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { PaymentGateway } from '@/lib/types-extended';
 import {
@@ -25,7 +25,7 @@ export default function GatewaysPage() {
 
   const fetchGateways = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('payment_gateways')
         .select('*')
         .order('display_order', { ascending: true });
@@ -40,7 +40,7 @@ export default function GatewaysPage() {
   };
 
   const toggleGateway = async (gateway: PaymentGateway) => {
-    const { error } = await supabase
+    const { error } = await database
       .from('payment_gateways')
       .update({ is_active: !gateway.is_active })
       .eq('id', gateway.id);

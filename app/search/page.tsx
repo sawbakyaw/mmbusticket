@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { SearchForm } from '@/components/search-form';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Trip, Operator, Bus as BusType, City, Route } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { format } from 'date-fns';
@@ -41,7 +41,7 @@ function SearchResults() {
       setLoading(true);
       try {
         // Get cities first
-        const { data: cities } = await supabase
+        const { data: cities } = await database
           .from('cities')
           .select('*');
 
@@ -54,7 +54,7 @@ function SearchResults() {
         }
 
         // Get route
-        const { data: routes } = await supabase
+        const { data: routes } = await database
           .from('routes')
           .select('*')
           .eq('from_city_id', fromCity.id)
@@ -73,7 +73,7 @@ function SearchResults() {
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999);
 
-        const { data: tripsData } = await supabase
+        const { data: tripsData } = await database
           .from('trips')
           .select('*')
           .in('route_id', routeIds)
@@ -90,12 +90,12 @@ function SearchResults() {
         const operatorIds = Array.from(new Set(tripsData.map(t => t.operator_id)));
         const busIds = Array.from(new Set(tripsData.map(t => t.bus_id)));
 
-        const { data: operators } = await supabase
+        const { data: operators } = await database
           .from('operators')
           .select('*')
           .in('id', operatorIds);
 
-        const { data: buses } = await supabase
+        const { data: buses } = await database
           .from('buses')
           .select('*')
           .in('id', busIds);
@@ -202,6 +202,8 @@ function SearchResults() {
             initialFrom={from}
             initialTo={to}
             initialDate={date}
+            initialSeats={seats}
+            initialForeigner={isForeigner}
             compact
           />
         </div>

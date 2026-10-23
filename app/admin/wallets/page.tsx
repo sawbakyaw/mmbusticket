@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { Wallet, WalletTransaction } from '@/lib/types-extended';
 import {
@@ -32,14 +32,14 @@ export default function WalletsPage() {
 
   const fetchData = async () => {
     try {
-      const { data: walletsData, error: walletsError } = await supabase
+      const { data: walletsData, error: walletsError } = await database
         .from('wallets')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (walletsError) throw walletsError;
 
-      const { data: transactionsData, error: transactionsError } = await supabase
+      const { data: transactionsData, error: transactionsError } = await database
         .from('wallet_transactions')
         .select('*')
         .order('created_at', { ascending: false })

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MapPin, ArrowRight, ArrowLeftRight, Search, Globe } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { City } from '@/lib/types';
 import { useLanguage } from '@/hooks/use-language';
 import { format } from 'date-fns';
@@ -12,16 +12,18 @@ interface SearchFormProps {
   initialFrom?: string;
   initialTo?: string;
   initialDate?: string;
+  initialSeats?: number;
+  initialForeigner?: boolean;
   compact?: boolean;
 }
 
-export function SearchForm({ initialFrom, initialTo, initialDate, compact = false }: SearchFormProps) {
+export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats = 1, initialForeigner = false, compact = false }: SearchFormProps) {
   const router = useRouter();
   const { t, language } = useLanguage();
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isForeigner, setIsForeigner] = useState(false);
-  const [numberOfSeats, setNumberOfSeats] = useState(1);
+  const [isForeigner, setIsForeigner] = useState(initialForeigner);
+  const [numberOfSeats, setNumberOfSeats] = useState(initialSeats);
 
   const [fromCity, setFromCity] = useState(initialFrom || '');
   const [toCity, setToCity] = useState(initialTo || '');
@@ -33,7 +35,7 @@ export function SearchForm({ initialFrom, initialTo, initialDate, compact = fals
   useEffect(() => {
     async function fetchCities() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await database
           .from('cities')
           .select('*')
           .order('is_popular', { ascending: false })

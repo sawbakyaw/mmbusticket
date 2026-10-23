@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { DashboardStats } from '@/lib/types-extended';
 import { Booking } from '@/lib/types';
@@ -27,32 +27,32 @@ export default function AdminDashboardPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const { data: bookings } = await supabase
+      const { data: bookings } = await database
         .from('bookings')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
 
-      const { count: totalBookings } = await supabase
+      const { count: totalBookings } = await database
         .from('bookings')
         .select('*', { count: 'exact', head: true });
 
-      const { count: todayBookingsCount } = await supabase
+      const { count: todayBookingsCount } = await database
         .from('bookings')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today.toISOString());
 
-      const { count: pendingRefundsCount } = await supabase
+      const { count: pendingRefundsCount } = await database
         .from('refund_requests')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
 
-      const { count: operatorsCount } = await supabase
+      const { count: operatorsCount } = await database
         .from('operators')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
-      const { count: agentsCount } = await supabase
+      const { count: agentsCount } = await database
         .from('agents')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);

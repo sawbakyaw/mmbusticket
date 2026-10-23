@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { CommissionRule, CommissionPayout } from '@/lib/types-extended';
 import {
@@ -27,12 +27,12 @@ export default function CommissionsPage() {
 
   const fetchData = async () => {
     try {
-      const { data: rulesData } = await supabase
+      const { data: rulesData } = await database
         .from('commission_rules')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const { data: payoutsData } = await supabase
+      const { data: payoutsData } = await database
         .from('commission_payouts')
         .select('*')
         .order('created_at', { ascending: false })

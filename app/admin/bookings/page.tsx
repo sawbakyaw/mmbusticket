@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
-import { Booking } from '@/lib/types';
+import { BookingWithPayment } from '@/lib/types';
 import {
   Search, Filter, Download, Eye, RefreshCw, XCircle,
   CheckCircle, Clock, Ticket, TrendingUp
@@ -19,7 +19,7 @@ const paymentColors: Record<string, string> = {
 
 export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingWithPayment[]>([]);
   const [search, setSearch] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('all');
 
@@ -29,7 +29,7 @@ export default function BookingsPage() {
 
   const fetchBookings = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await database
         .from('bookings')
         .select('*')
         .order('created_at', { ascending: false })
@@ -41,6 +41,20 @@ export default function BookingsPage() {
       console.error('Error fetching bookings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyPayment = async (paymentId: string, status: 'verified' | 'rejected') => {
+    try {
+      const response = await fetch(`/api/admin/payments/${encodeURIComponent(paymentId)}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Payment verification failed');
+      await fetchBookings();
+    } catch (error) {
+      console.error('Error verifying payment:', error);
     }
   };
 
@@ -224,9 +238,18 @@ export default function BookingsPage() {
                         MMK {formatCurrency(booking.total_amount)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${paymentColors[booking.payment_status] || paymentColors.pending}`}>
-                          {booking.payment_status}
-                        </span>
+                        <div className="space-y-2">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${paymentColors[booking.payment_status] || paymentColors.pending}`}>
+                            {booking.payment_status}
+                          </span>
+                          {booking.latest_payment?.transaction_ref && <p className="text-xs text-slate-400 break-all">Ref: {booking.latest_payment.transaction_ref}</p>}
+                          {booking.latest_payment?.payment_status === 'pending' && booking.latest_payment.transaction_ref && (
+                            <div className="flex gap-2">
+                              <button onClick={() => verifyPayment(booking.latest_payment!.id, 'verified')} className="text-xs text-green-400 hover:text-green-300">Verify</button>
+                              <button onClick={() => verifyPayment(booking.latest_payment!.id, 'rejected')} className="text-xs text-red-400 hover:text-red-300">Reject</button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-slate-400 text-sm">
                         {new Date(booking.created_at).toLocaleDateString()}

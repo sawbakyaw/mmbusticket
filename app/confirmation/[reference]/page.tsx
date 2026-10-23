@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { supabase } from '@/lib/supabase';
+import { database } from '@/lib/db-client';
 import { Booking, Trip, Operator, City, Bus as BusType } from '@/lib/types';
 import { format } from 'date-fns';
 import {
@@ -34,49 +34,22 @@ function ConfirmationPage() {
     async function fetchBooking() {
       setLoading(true);
       try {
-        const { data } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('booking_reference', bookingReference)
-          .maybeSingle();
-
+        const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}`);
+        const result = await response.json();
+        const data = result.booking;
         if (!data) {
           router.push('/');
           return;
         }
-
         setBooking(data);
-
-        // Fetch trip with all details
-        if (data.trip_id) {
-          const { data: tripData } = await supabase
-            .from('trips')
-            .select(`
-              *,
-              operators (*),
-              buses (*)
-            `)
-            .eq('id', data.trip_id)
-            .maybeSingle();
-
-          if (tripData && tripData.routes) {
-            const route = tripData.routes as any;
-            const { data: cities } = await supabase
-              .from('cities')
-              .select('*')
-              .in('id', [route.from_city_id, route.to_city_id]);
-
-            const fromCity = cities?.find(c => c.id === route.from_city_id);
-            const toCity = cities?.find(c => c.id === route.to_city_id);
-
-            setTrip({
-              ...tripData,
-              operators: tripData.operators as Operator,
-              buses: tripData.buses as BusType,
-              fromCity: fromCity!,
-              toCity: toCity!,
-            } as TripWithDetails);
-          }
+        if (result.trip?.routes) {
+          setTrip({
+            ...result.trip,
+            operators: result.trip.operators as Operator,
+            buses: result.trip.buses as BusType,
+            fromCity: result.trip.routes.from_city,
+            toCity: result.trip.routes.to_city,
+          } as TripWithDetails);
         }
       } catch (err) {
         console.error('Error fetching booking:', err);
@@ -97,7 +70,7 @@ function ConfirmationPage() {
   const downloadTicket = () => {
     // Create printable ticket content
     const ticketContent = `
-MM-BusTicket Pro - E-TICKET
+MM-BusTicket Pro - ${booking?.payment_status === 'paid' ? 'E-TICKET' : 'BOOKING RECEIPT'}
 ============================
 
 Booking Reference: ${booking?.booking_reference}
@@ -113,7 +86,8 @@ Date: ${trip ? format(new Date(trip.departure_time), 'EEEE, MMMM d, yyyy') : ''}
 Departure: ${trip ? format(new Date(trip.departure_time), 'hh:mm a') : ''}
 
 Seats: ${booking?.seat_numbers?.join(', ')}
-Total Paid: MMK ${booking?.total_amount?.toLocaleString()}
+Payment Status: ${booking?.payment_status === 'paid' ? 'Verified' : booking?.payment_status === 'failed' ? 'Rejected' : 'Pending verification'}
+Total Amount: MMK ${booking?.total_amount?.toLocaleString()}
 
 Please arrive at the bus station 45 minutes before departure.
 Present this e-ticket and valid ID to board.
@@ -178,10 +152,10 @@ Booked via MM-BusTicket Pro
               <CheckCircle2 className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Booking Confirmed!
+              {booking?.payment_status === 'paid' ? 'Booking Confirmed!' : booking?.payment_status === 'failed' ? 'Payment Rejected — Please Retry' : 'Booking Received — Payment Pending'}
             </h1>
             <p className="text-slate-400">
-              Your e-ticket has been sent to {booking?.passenger_phone}
+              Booking details are saved for {booking?.passenger_phone}
             </p>
           </div>
 
@@ -296,9 +270,9 @@ Booked via MM-BusTicket Pro
                 </div>
               </div>
 
-              {/* Total Paid */}
+              {/* Total amount */}
               <div className="flex items-center justify-between py-4 px-4 bg-gradient-to-r from-orange-500/10 to-teal-500/10 rounded-xl border border-orange-500/20">
-                <span className="text-slate-300 font-medium">Total Paid</span>
+                <span className="text-slate-300 font-medium">{booking?.payment_status === 'paid' ? 'Total Paid' : 'Total Amount'}</span>
                 <span className="text-2xl font-bold text-orange-500">
                   MMK {formatPrice(booking?.total_amount || 0)}
                 </span>
@@ -309,7 +283,7 @@ Booked via MM-BusTicket Pro
                 <h4 className="font-medium text-amber-400 mb-2">Important Information</h4>
                 <ul className="text-sm text-amber-200 space-y-1">
                   <li>Please arrive at the bus station 45 minutes before departure.</li>
-                  <li>Present this e-ticket and valid ID to board.</li>
+                  <li>{booking?.payment_status === 'paid' ? 'Present this e-ticket and valid ID to board.' : booking?.payment_status === 'failed' ? 'The payment was rejected. Submit a new transaction reference before boarding.' : 'Your payment reference is awaiting verification; this is not a paid ticket yet.'}</li>
                   <li>{booking?.is_foreigner ? 'Ensure you have Immigration Form C ready.' : 'NRC is required for verification.'}</li>
                 </ul>
               </div>
