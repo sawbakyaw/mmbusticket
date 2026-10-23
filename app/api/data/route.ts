@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-server';
-import { pool } from '@/lib/db';
+import { isDatabaseConfigured, pool } from '@/lib/db';
 
 const TABLES = new Set([
   'cities', 'operators', 'buses', 'routes', 'trips', 'seats', 'seat_locks', 'bookings',
   'user_profiles', 'roles', 'wallets', 'operator_users', 'agent_users', 'agents',
   'refund_requests', 'payment_gateways', 'commission_rules', 'commission_payouts',
-  'notifications', 'notification_templates', 'audit_logs', 'wallet_transactions', 'cms_pages', 'cms_settings',
+  'notifications', 'notification_templates', 'audit_logs', 'wallet_transactions', 'cms_pages', 'cms_settings', 'passengers', 'payments',
 ]);
 const PUBLIC_TABLES = new Set(['cities', 'operators', 'buses', 'routes', 'trips', 'seats', 'seat_locks']);
 const ADMIN_ROLES = new Set(['super_admin', 'admin']);
@@ -15,6 +15,7 @@ const OPERATORS = new Set(['eq', 'neq', 'in', 'gt', 'gte', 'lt', 'lte']);
 const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
 
 export async function POST(request: NextRequest) {
+  if (!isDatabaseConfigured()) return NextResponse.json({ error: 'DATABASE_URL is not configured.' }, { status: 503 });
   try {
     const body = await request.json();
     if (!TABLES.has(body.table) || !OPERATIONS.has(body.operation)) return NextResponse.json({ error: 'Unsupported database request.' }, { status: 400 });
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
       const limit = Number.isInteger(body.limit) ? Math.min(Math.max(body.limit, 0), 500) : 250;
       const selectedColumns = body.table === 'seat_locks' ? 'id, seat_id, trip_id, locked_at, expires_at, created_at' : body.table === 'cms_settings' ? 'setting_key AS key, setting_value AS value' : '*';
       const { rows } = await pool.query(`SELECT ${selectedColumns} FROM "${body.table}"${where}${orderBy ? ` ORDER BY ${orderBy}` : ''} LIMIT ${limit}`, values);
-      const data = await attachRelations(body.table, rows);
+      const data = await attachRelations(body.table, rows, isAdmin);
       return NextResponse.json({ data, count: countResult?.rows[0]?.count ?? null });
     }
 
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function attachRelations(table: string, rows: any[]) {
+async function attachRelations(table: string, rows: any[], includePaymentDetails = false) {
   if (!rows.length) return rows;
   if (table === 'trips') {
     const routeIds = Array.from(new Set(rows.map(row => row.route_id)));
@@ -138,6 +139,15 @@ async function attachRelations(table: string, rows: any[]) {
     const cityById = new Map(cities.rows.map((row: any) => [row.id, row]));
     const routeById = new Map(routes.rows.map((row: any) => [row.id, { ...row, from_city: cityById.get(row.from_city_id), to_city: cityById.get(row.to_city_id) }]));
     return rows.map(row => ({ ...row, operators: operatorById.get(row.operator_id), buses: busById.get(row.bus_id), routes: routeById.get(row.route_id) }));
+  }
+  if (table === 'bookings' && includePaymentDetails) {
+    const bookingIds = rows.map(row => row.id);
+    const { rows: payments } = await pool.query(
+      `SELECT DISTINCT ON (booking_id) id, booking_id, payment_method, transaction_ref, payment_status, created_at, verified_at, verified_by
+       FROM payments WHERE booking_id = ANY($1::uuid[]) ORDER BY booking_id, created_at DESC, id DESC`, [bookingIds],
+    );
+    const latestByBooking = new Map(payments.map(payment => [payment.booking_id, payment]));
+    return rows.map(row => ({ ...row, latest_payment: latestByBooking.get(row.id) ?? null }));
   }
   if (table === 'user_profiles') {
     const roleIds = Array.from(new Set(rows.map(row => row.role_id).filter(Boolean)));

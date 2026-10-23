@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { isDatabaseConfigured, pool } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
+  if (!isDatabaseConfigured()) return NextResponse.json({ error: 'DATABASE_URL is not configured.' }, { status: 503 });
   const body = await request.json();
   if (typeof body.seatId !== 'string' || typeof body.sessionId !== 'string') return NextResponse.json({ error: 'Invalid seat unlock request.' }, { status: 400 });
   const client = await pool.connect();

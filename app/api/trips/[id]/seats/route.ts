@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { isDatabaseConfigured, pool } from '@/lib/db';
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  if (!isDatabaseConfigured()) return NextResponse.json({ error: 'DATABASE_URL is not configured.' }, { status: 503 });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

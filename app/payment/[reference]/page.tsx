@@ -30,6 +30,8 @@ function PaymentPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>('');
+  const [transactionRef, setTransactionRef] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -56,20 +58,24 @@ function PaymentPage() {
   }, [bookingReference, router]);
 
   const handlePayment = async () => {
-    if (!selectedPayment || !booking) return;
+    if (!selectedPayment || !transactionRef.trim() || !booking) return;
 
     setProcessing(true);
-
-    const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}/payment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentMethod: selectedPayment }),
-    });
-    if (!response.ok) {
+    setPaymentError(null);
+    try {
+      const response = await fetch(`/api/bookings/${encodeURIComponent(bookingReference)}/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod: selectedPayment, transactionRef: transactionRef.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to submit payment');
+      router.push(`/confirmation/${bookingReference}`);
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Unable to submit payment');
+    } finally {
       setProcessing(false);
-      return;
     }
-    router.push(`/confirmation/${bookingReference}`);
   };
 
   const copyReference = () => {
@@ -156,14 +162,25 @@ function PaymentPage() {
                 <div className="mt-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                   <h4 className="font-medium text-white mb-2">Payment Instructions</h4>
                   <p className="text-sm text-slate-400">
-                    Payment methods are not connected yet. Choosing one records your preference but does not charge you or confirm payment.
+                    Enter the transaction reference from your transfer. Payment stays pending until an administrator verifies it.
                   </p>
+                  <label className="block text-sm text-slate-300 mt-4" htmlFor="transaction-reference">Transaction reference</label>
+                  <input
+                    id="transaction-reference"
+                    value={transactionRef}
+                    onChange={(event) => setTransactionRef(event.target.value)}
+                    maxLength={120}
+                    required
+                    className="w-full input-dark rounded-lg px-3 py-2 mt-2"
+                    placeholder="Enter transfer reference"
+                  />
                 </div>
               )}
+              {paymentError && <p role="alert" className="text-sm text-red-400 mt-4">{paymentError}</p>}
 
               <button
                 onClick={handlePayment}
-                disabled={!selectedPayment || processing}
+                disabled={!selectedPayment || !transactionRef.trim() || processing}
                 className="w-full btn-primary py-4 rounded-xl text-lg font-semibold mt-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing ? (

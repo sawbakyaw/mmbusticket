@@ -8,6 +8,8 @@ export type Trip = Database['public']['Tables']['trips']['Row'];
 export type Seat = Database['public']['Tables']['seats']['Row'];
 export type SeatLock = Database['public']['Tables']['seat_locks']['Row'];
 export type Booking = Database['public']['Tables']['bookings']['Row'];
+export type Payment = Database['public']['Tables']['payments']['Row'];
+export type BookingWithPayment = Booking & { latest_payment?: Payment | null };
 
 export interface TripWithDetails extends Trip {
   operators: Operator;

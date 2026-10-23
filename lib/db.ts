@@ -4,6 +4,8 @@ declare global {
   var postgresPool: Pool | undefined;
 }
 
+export const isDatabaseConfigured = () => Boolean(process.env.DATABASE_URL?.trim());
+
 export const pool = globalThis.postgresPool ?? new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 10,

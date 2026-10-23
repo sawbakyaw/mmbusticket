@@ -13,13 +13,14 @@ import { format } from 'date-fns';
 
 export default function FindBookingPage() {
   const [searchValue, setSearchValue] = useState('');
+  const [verificationPhone, setVerificationPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchValue.trim()) return;
+    if (!searchValue.trim() || !verificationPhone.trim()) return;
 
     setLoading(true);
     setError(null);
@@ -29,7 +30,7 @@ export default function FindBookingPage() {
       const response = await fetch('/api/bookings/lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: searchValue.trim().toUpperCase() }),
+        body: JSON.stringify({ reference: searchValue.trim().toUpperCase(), phone: verificationPhone.trim() }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Search failed');
@@ -41,7 +42,7 @@ export default function FindBookingPage() {
       }
     } catch (err) {
       console.error('Search error:', err);
-      setError('Failed to search. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to search. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +63,7 @@ export default function FindBookingPage() {
             <Ticket className="h-16 w-16 text-teal-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-white mb-3">Find Your Booking</h1>
             <p className="text-slate-400">
-              Retrieve your e-ticket using the booking reference from your confirmation
+              Verify the booking reference with the passenger phone number
             </p>
           </div>
 
@@ -83,10 +84,24 @@ export default function FindBookingPage() {
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2" htmlFor="verification-phone">
+                    Passenger Phone Number
+                  </label>
+                  <input
+                    id="verification-phone"
+                    type="tel"
+                    value={verificationPhone}
+                    onChange={(e) => setVerificationPhone(e.target.value)}
+                    placeholder="09 123 456 789"
+                    className="w-full input-dark rounded-xl px-4 py-3 text-lg"
+                    required
+                  />
+                </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !searchValue.trim()}
+                  disabled={loading || !searchValue.trim() || !verificationPhone.trim()}
                   className="w-full btn-primary py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
@@ -137,9 +152,11 @@ export default function FindBookingPage() {
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                       booking.payment_status === 'paid'
                         ? 'bg-teal-500/20 text-teal-400'
-                        : 'bg-amber-500/20 text-amber-400'
+                        : booking.payment_status === 'failed'
+                          ? 'bg-red-500/20 text-red-400'
+                          : 'bg-amber-500/20 text-amber-400'
                     }`}>
-                      {booking.payment_status === 'paid' ? 'Confirmed' : 'Pending'}
+                      {booking.payment_status === 'paid' ? 'Confirmed' : booking.payment_status === 'failed' ? 'Payment rejected' : 'Pending verification'}
                     </div>
                   </div>
 

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { isDatabaseConfigured, pool } from '@/lib/db';
 
 export async function GET(_request: NextRequest, { params }: { params: { reference: string } }) {
+  if (!isDatabaseConfigured()) return NextResponse.json({ error: 'DATABASE_URL is not configured.' }, { status: 503 });
   const { rows } = await pool.query(
     `SELECT id, booking_reference, trip_id, passenger_name, passenger_phone, passenger_email, seat_numbers,
             total_amount, payment_method, payment_status, is_foreigner, notes, booked_at, created_at

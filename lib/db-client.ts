@@ -372,6 +372,8 @@ export interface Database {
           id: string;
           booking_reference: string;
           trip_id: string;
+          schedule_id: string;
+          status: 'pending' | 'confirmed' | 'cancelled';
           passenger_name: string;
           passenger_phone: string;
           passenger_email: string | null;
@@ -392,6 +394,7 @@ export interface Database {
           trip_id: string;
           passenger_name: string;
           passenger_phone: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
           passenger_email?: string | null;
           passenger_nrc?: string | null;
           seat_numbers: string[];
@@ -423,6 +426,64 @@ export interface Database {
           created_at?: string;
         };
       };
+      passengers: {
+        Row: {
+          id: string;
+          booking_id: string;
+          full_name: string;
+          phone_number: string;
+          nrc_number: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          full_name: string;
+          phone_number: string;
+          nrc_number?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          full_name?: string;
+          phone_number?: string;
+          nrc_number?: string | null;
+          created_at?: string;
+        };
+      };
+      payments: {
+        Row: {
+          id: string;
+          booking_id: string;
+          payment_method: string | null;
+          transaction_ref: string | null;
+          payment_status: 'pending' | 'verified' | 'rejected';
+          created_at: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          payment_method?: string | null;
+          transaction_ref?: string | null;
+          payment_status?: 'pending' | 'verified' | 'rejected';
+          created_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          payment_method?: string | null;
+          transaction_ref?: string | null;
+          payment_status?: 'pending' | 'verified' | 'rejected';
+          created_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+      };
     };
     Views: {};
     Functions: {
@@ -433,6 +494,20 @@ export interface Database {
       clean_expired_locks: {
         Args: {};
         Returns: void;
+      };
+      create_guest_booking: {
+        Args: {
+          p_trip_id: string;
+          p_session_id: string;
+          p_seat_numbers: string[];
+          p_full_name: string;
+          p_phone_number: string;
+          p_email: string | null;
+          p_nrc_number: string | null;
+          p_is_foreigner: boolean;
+          p_notes: string | null;
+        };
+        Returns: Json;
       };
     };
     Enums: {};

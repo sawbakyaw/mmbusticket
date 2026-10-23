@@ -24,14 +24,22 @@ Keep the password in a password manager or protected deployment secret; do not c
 
 ## 2. Create the tables and starter cities
 
-Copy `database/schema.sql` and `database/seed.sql` to the VPS using your normal private file-transfer method. Run them as the database owner:
+Copy `database/schema.sql`, `database/seed.sql`, and `database/migrations/202606280001_guest_checkout.sql` to the VPS using your normal private file-transfer method. Run them as the database owner:
 
 ```bash
 psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/schema.sql
 psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/seed.sql
 ```
 
-`-W` prompts for the password rather than embedding it in the command. The schema creates the app's tables, indexes, role records, and seat-lock functions. The seed file inserts starter city names only; add real operators, buses, routes, trips, and seats before offering tickets.
+`-W` prompts for the password rather than embedding it in the command. The schema creates the app's base tables, indexes, role records, and seat-lock functions. The seed file inserts starter city names only; add real operators, buses, routes, trips, and seats before offering tickets.
+
+Apply the additive guest-checkout migration on both a fresh database and an existing database with the base schema:
+
+```bash
+psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/migrations/202606280001_guest_checkout.sql
+```
+
+It adds booking status and schedule alias fields, guest passenger and payment tables, indexes, and the atomic `create_guest_booking` function. It does not replace the existing booking, seat-lock, or trip tables.
 
 Create the first administrator on a machine that can reach the database and has the project dependencies installed. Set `DATABASE_URL` in that machine's protected environment, then run:
 
@@ -62,10 +70,12 @@ For local development, copy `.env.example` to `.env.local`, set `DATABASE_URL`, 
 2. Open the home page and confirm the city selector loads.
 3. Add a test operator, bus, route, trip, and seats; verify search and seat selection.
 4. Open the same trip in two browser sessions and verify a seat lock prevents the second session from reserving the same seat.
-5. Complete a test booking and confirm it remains `pending` until a real payment provider is integrated and verifies payment.
-6. Create a regular customer account and the admin account; verify admin pages reject the customer account.
+5. Complete a guest booking without signing in and confirm `bookings`, `passengers`, and an initial pending `payments` row are created together.
+6. Submit a test transaction reference, retrieve the booking with both its reference and matching passenger phone, then verify/reject it from the admin bookings page.
+7. Confirm that only administrator sessions can verify payments and that guest payment submission never marks a booking paid by itself.
+8. Create a regular customer account and the admin account; verify admin pages reject the customer account.
 
-Seat availability refreshes by polling the API; it does not use PostgreSQL's native push/realtime feature. Payment method selection is only recorded as a preference: this project does not currently integrate or verify a payment gateway.
+Seat availability refreshes by polling the API; it does not use PostgreSQL's native push/realtime feature. Guest payment submissions store the method and transaction reference for manual administrator verification; there is no payment-gateway integration or automatic payment verification.
 
 ## 5. Backups and operation
 
