@@ -19,8 +19,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     if (!TABLES.has(body.table) || !OPERATIONS.has(body.operation)) return NextResponse.json({ error: 'Unsupported database request.' }, { status: 400 });
     if (body.operation !== 'select' && body.table === 'bookings') return NextResponse.json({ error: 'Use the booking API for booking changes.' }, { status: 403 });
-    if (body.operation === 'delete' && body.table !== 'seat_locks') return NextResponse.json({ error: 'Delete is not permitted.' }, { status: 403 });
-    if (body.operation === 'update' && !['payment_gateways', 'refund_requests', 'seats'].includes(body.table)) return NextResponse.json({ error: 'Update is not permitted.' }, { status: 403 });
+    if (body.operation === 'delete') return NextResponse.json({ error: 'Delete is not permitted.' }, { status: 403 });
+    if (body.operation === 'update' && !['payment_gateways', 'refund_requests'].includes(body.table)) return NextResponse.json({ error: 'Update is not permitted.' }, { status: 403 });
 
     const user = await getCurrentUser();
     const isAdmin = !!user && ADMIN_ROLES.has(user.role);
@@ -28,6 +28,16 @@ export async function POST(request: NextRequest) {
     if (!user && !publicRead) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     if (user && !isAdmin && !publicRead && !['operator_admin', 'operator_staff', 'agent_admin', 'agent_staff', 'customer'].includes(user.role)) {
       return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
+    }
+    if (user && !isAdmin && !publicRead) {
+      const roleTables: Record<string, string[]> = {
+        operator_admin: ['operators', 'buses', 'trips', 'bookings'],
+        operator_staff: ['operators', 'buses', 'trips', 'bookings'],
+        agent_admin: ['agents', 'agent_users', 'bookings', 'wallets'],
+        agent_staff: ['agents', 'agent_users', 'bookings', 'wallets'],
+        customer: ['user_profiles', 'wallets'],
+      };
+      if (!roleTables[user.role]?.includes(body.table)) return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
     }
     if (body.operation !== 'select' && (!user || !isAdmin)) return NextResponse.json({ error: 'Administrator access required.' }, { status: 403 });
 
@@ -96,10 +106,11 @@ export async function POST(request: NextRequest) {
     if (body.operation === 'update') {
       if (!body.values || typeof body.values !== 'object' || Array.isArray(body.values)) return NextResponse.json({ error: 'Invalid update.' }, { status: 400 });
       const columns = Object.keys(body.values);
-      if (!columns.length || columns.some(column => !IDENTIFIER.test(column))) return NextResponse.json({ error: 'Invalid update.' }, { status: 400 });
+      const updateable = body.table === 'payment_gateways' ? ['is_active'] : ['status', 'processed_at'];
+      if (!columns.length || columns.some(column => !IDENTIFIER.test(column) || !updateable.includes(column))) return NextResponse.json({ error: 'Invalid update.' }, { status: 400 });
       const assignments = columns.map(column => { values.push(body.values[column]); return `"${column}" = $${values.length}`; });
       const { rows } = await pool.query(`UPDATE "${body.table}" SET ${assignments.join(', ')}${where} RETURNING *`, values);
-      return NextResponse.json({ data: rows, count: rows.length });
+      return NextResponse.json({ data: await attachRelations(body.table, rows), count: rows.length });
     }
 
     if (!conditions.length) return NextResponse.json({ error: 'A filter is required.' }, { status: 400 });

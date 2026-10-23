@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { translations, Language, TranslationKey } from '@/lib/translations';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/header';
@@ -99,15 +99,11 @@ function SeatSelectionPage() {
           toCity: toCity!,
         });
 
-        // Fetch seats
-        const { data: seatsData } = await database
-          .from('seats')
-          .select('*')
-          .eq('trip_id', tripId)
-          .order('row_number')
-          .order('column_number');
-
-        setSeats(seatsData || []);
+        const availabilityResponse = await fetch(`/api/trips/${encodeURIComponent(tripId)}/seats`);
+        const availability = await availabilityResponse.json();
+        if (!availabilityResponse.ok) throw new Error('Unable to load seats');
+        setSeats(availability.seats || []);
+        setSeatLocks(availability.locks || []);
       } catch (err) {
         console.error('Error fetching trip:', err);
         setError('Failed to load trip details');
@@ -122,28 +118,14 @@ function SeatSelectionPage() {
   useEffect(() => {
     if (!tripId) return;
     const refreshSeats = async () => {
-      const { data: seatData } = await database.from('seats').select('*').eq('trip_id', tripId).order('row_number').order('column_number');
-      const { data: lockData } = await database.from('seat_locks').select('*').eq('trip_id', tripId).gt('expires_at', new Date().toISOString());
-      setSeats(seatData || []);
-      setSeatLocks(lockData || []);
+      const response = await fetch(`/api/trips/${encodeURIComponent(tripId)}/seats`);
+      if (!response.ok) return;
+      const availability = await response.json();
+      setSeats(availability.seats || []);
+      setSeatLocks(availability.locks || []);
     };
-    void database.rpc('clean_expired_locks');
     const refreshInterval = setInterval(refreshSeats, 3000);
-    const cleanupInterval = setInterval(() => { void database.rpc('clean_expired_locks'); }, 30000);
-    return () => {
-      clearInterval(refreshInterval);
-      clearInterval(cleanupInterval);
-    };
-  }, [tripId]);
-
-  // Fetch seat locks
-  const fetchSeatLocks = useCallback(async () => {
-    const { data } = await database
-      .from('seat_locks')
-      .select('*')
-      .eq('trip_id', tripId)
-      .gt('expires_at', new Date().toISOString());
-    setSeatLocks(data || []);
+    return () => clearInterval(refreshInterval);
   }, [tripId]);
 
   // Lock a seat
@@ -183,7 +165,6 @@ function SeatSelectionPage() {
       setError('Failed to select seat. Please try again.');
     } finally {
       setLockingSeat(null);
-      fetchSeatLocks();
     }
   };
 
