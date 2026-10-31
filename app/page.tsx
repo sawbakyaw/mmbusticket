@@ -283,16 +283,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white mb-6">{t('weAccept')}</h2>
-            <div className="flex flex-wrap justify-center gap-4">
-              {['VISA', 'MasterCard', 'MPU', 'WavePay', 'KBZPay', 'CBPay', 'AYAPay'].map((payment, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800/50 rounded-lg px-6 py-3 border border-slate-700/50 text-slate-300 font-medium"
-                >
-                  {payment}
-                </div>
-              ))}
-            </div>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              {t('weAccept')}
+            </p>
           </div>
         </div>
       </section>

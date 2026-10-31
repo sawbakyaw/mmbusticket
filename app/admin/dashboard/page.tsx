@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="text-slate-400">Welcome back! Here's what's happening today.</p>
+            <p className="text-slate-400">Welcome back! Here&apos;s what&apos;s happening today.</p>
           </div>
           <div className="flex items-center gap-2">
             <select className="input-dark rounded-lg px-4 py-2 text-sm">
@@ -184,11 +184,11 @@ export default function AdminDashboardPage() {
 
         {/* Secondary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Today's Performance */}
+          {/* Today&apos;s Performance */}
           <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="h-5 w-5 text-teal-400" />
-              Today's Performance
+              Today&apos;s Performance
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

@@ -22,6 +22,7 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
   const { t, language } = useLanguage();
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cityLoadFailed, setCityLoadFailed] = useState(false);
   const [isForeigner, setIsForeigner] = useState(initialForeigner);
   const [numberOfSeats, setNumberOfSeats] = useState(initialSeats);
 
@@ -52,6 +53,7 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
         }
       } catch (error) {
         console.error('Error fetching cities:', error);
+        setCityLoadFailed(true);
       } finally {
         setLoading(false);
       }
@@ -174,10 +176,16 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
             />
           </div>
 
-          {/* Search Button */}
-          <button
-            type="submit"
-            className="btn-primary w-full rounded-lg py-2.5 flex items-center justify-center gap-2"
+          {cityLoadFailed && (
+          <p role="alert" className="text-sm text-amber-300">
+            {language === 'my' ? 'မြို့များကို မရယူနိုင်ပါ။ ခဏအကြာတွင် ပြန်ကြိုးစားပါ။' : 'Cities could not be loaded. Please try again later.'}
+          </p>
+        )}
+
+        {/* Search Button */}
+        <button
+          type="submit"
+          className="btn-primary w-full rounded-lg py-2.5 flex items-center justify-center gap-2"
           >
             <Search className="h-4 w-4" />
             <span>{t('searchBuses')}</span>
@@ -336,6 +344,12 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
             </select>
           </div>
         </div>
+
+        {cityLoadFailed && (
+          <p role="alert" className="text-sm text-amber-300">
+            {language === 'my' ? 'မြို့များကို မရယူနိုင်ပါ။ ခဏအကြာတွင် ပြန်ကြိုးစားပါ။' : 'Cities could not be loaded. Please try again later.'}
+          </p>
+        )}
 
         {/* Search Button */}
         <button

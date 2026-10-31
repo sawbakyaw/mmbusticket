@@ -32,8 +32,8 @@ export default function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 10 || password.length > 72) {
+      setError('Password must be between 10 and 72 characters');
       return;
     }
 
@@ -61,14 +61,13 @@ export default function SignupPage() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-3">Account Created!</h1>
             <p className="text-slate-400 mb-6">
-              We've sent a confirmation email to <span className="text-white">{email}</span>.
-              Please verify your email to activate your account.
+              Your account is ready. You can continue to MM-BusTicket now.
             </p>
             <Link
-              href="/login"
+              href="/"
               className="btn-primary px-6 py-3 rounded-xl inline-flex items-center gap-2"
             >
-              Continue to Login
+              Continue
             </Link>
           </div>
         </main>
@@ -162,6 +161,8 @@ export default function SignupPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a secure password"
+                    minLength={10}
+                    maxLength={72}
                     className="w-full input-dark rounded-xl pl-12 pr-12 py-3"
                     required
                   />

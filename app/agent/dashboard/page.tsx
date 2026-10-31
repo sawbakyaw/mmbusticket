@@ -160,11 +160,11 @@ export default function AgentDashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Today's Performance */}
+          {/* Today&apos;s Performance */}
           <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="h-5 w-5 text-green-400" />
-              Today's Performance
+              Today&apos;s Performance
             </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

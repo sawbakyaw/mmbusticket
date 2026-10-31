@@ -19,7 +19,7 @@ export const translations = {
 
     // Trust Badges
     preferredSeat: 'Get Your Preferred Seat',
-    instantConfirmation: 'Instant Confirmation',
+    instantConfirmation: 'Booking confirmation after review',
     overOperators: 'Over 100 Operators',
     support247: '24/7 Support',
 
@@ -39,9 +39,9 @@ export const translations = {
     operatorsTitle: '100+ Bus Operators',
     operatorsDesc: 'Choose from 100+ major bus operators covering 200 destinations.',
     instantBookingTitle: 'Instant Booking',
-    instantBookingDesc: 'Book your trip in less than 3 minutes. Instant confirmation after payment.',
-    securePaymentTitle: 'Secure Payment',
-    securePaymentDesc: 'Pay with VISA, MASTER, MPU, WaveMoney, KBZPay and more.',
+    instantBookingDesc: 'Submit your booking and payment reference for administrator review.',
+    securePaymentTitle: 'Manual Payment Review',
+    securePaymentDesc: 'Submit your transfer reference. An administrator verifies payment before confirmation.',
     helpTitle: 'Help 24/7',
     helpDesc: 'Our support center is available 24/7 for your questions and concerns.',
 
@@ -55,7 +55,7 @@ export const translations = {
     operatorsSectionDesc: 'Trusted operators for your journey',
 
     // Payment Methods
-    weAccept: 'We Accept',
+    weAccept: 'Payment submission requires administrator verification',
 
     // FAQ
     haveQuestions: 'Have Questions?',
@@ -186,7 +186,7 @@ export const translations = {
 
     // Trust Badges
     preferredSeat: 'နှစ်သက်ရာနေရာရယူပါ',
-    instantConfirmation: 'ချက်ခြင်းအတည်ပြုချက်',
+    instantConfirmation: 'စစ်ဆေးပြီးနောက် အတည်ပြုချက်',
     overOperators: 'Operator ၁၀၀ကျော်',
     support247: '24/7 ပံ့ပိုးမှု',
 
@@ -206,9 +206,9 @@ export const translations = {
     operatorsTitle: 'ဘတ်စ်ကားCompany ၁၀၀ကျော်',
     operatorsDesc: 'နိုင်ငံအနှံ့မြို့နေရာ ၂၀၀ကျော်ကို ဘတ်စ်ကားCompany ၁၀၀ကျော်မှ ရွေးချယ်ပါ။',
     instantBookingTitle: 'ချက်ခြင်းBooking',
-    instantBookingDesc: '၃ မိနစ်အောက်တွင် Bookingပြုလုပ်နိုင်ပါသည်။ Paymentပြီးတာနှင့် Confirmation။',
-    securePaymentTitle: 'လုံခြုံသောPayment',
-    securePaymentDesc: 'VISA, MASTER, MPU, WaveMoney, KBZPay စသည်ဖြင့် Paymentပြုလုပ်နိုင်ပါသည်။',
+    instantBookingDesc: 'Booking နှင့် ငွေလွှဲအချက်အလက်ကို တင်ပြပြီး စီမံခန့်ခွဲသူ စစ်ဆေးမှုကို စောင့်ပါ။',
+    securePaymentTitle: 'ငွေပေးချေမှု စစ်ဆေးခြင်း',
+    securePaymentDesc: 'ငွေလွှဲအချက်အလက်ကို တင်ပြပါ။ အတည်ပြုမီ စီမံခန့်ခွဲသူမှ စစ်ဆေးပါမည်။',
     helpTitle: '၂၄နာရီပံ့ပိုးမှု',
     helpDesc: 'သင့်မေးမြန်းချက်များနှင့် ပြဿနာများအတွက် ၂၄နာရီ ပံ့ပိုးပေးပါသည်။',
 
@@ -222,7 +222,7 @@ export const translations = {
     operatorsSectionDesc: 'ယုံကြည်စိတ်ချရသောCompanyများ',
 
     // Payment Methods
-    weAccept: 'လက်ခံသောPaymentများ',
+    weAccept: 'ငွေပေးချေမှုကို စီမံခန့်ခွဲသူမှ စစ်ဆေးပြီးမှ အတည်ပြုပါမည်',
 
     // FAQ
     haveQuestions: 'မေးခွန်းရှိပါသလား?',

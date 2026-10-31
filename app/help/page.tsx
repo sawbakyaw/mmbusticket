@@ -19,8 +19,8 @@ const faqs = {
       answer: 'Please contact our Customer Support Team at least 48 hours prior to your original departure date and time. Changes are subject to availability and depend on the terms and conditions of bus operators.',
     },
     {
-      question: 'Can you resend the bus ticket that I bought?',
-      answer: 'You can download the ticket again by clicking the download link that we sent via SMS and Email. Otherwise, go to our website and click "Find/Print Your Ticket" to look up your booking.',
+      question: 'How can I view my booking details again?',
+      answer: 'Use Find Your Booking with your booking reference and phone number to review your booking and payment status.',
     },
     {
       question: 'How long will the selected seat be blocked?',
@@ -33,16 +33,16 @@ const faqs = {
   ],
   payment: [
     {
-      question: 'How do I make sure about the payment details and booking confirmation status?',
-      answer: 'You will receive your confirmation email or SMS depending on the info you provided after the booking is confirmed.',
+      question: 'How is my payment and booking confirmed?',
+      answer: 'Submit your transfer transaction reference on the payment page. The payment remains pending until an administrator verifies it; check your booking status with Find Your Booking.',
     },
     {
-      question: 'What should I do if I do not receive the booking confirmation message after payment?',
-      answer: 'You will get a confirmation email once your booking is confirmed. This should only take about two minutes but sometimes can take longer. Check your spam/junk mail folders. If you still have not received anything, contact our Customer Service team.',
+      question: 'What should I do if my payment is still pending?',
+      answer: 'Payment submissions are reviewed manually. Check your booking status with Find Your Booking or contact Customer Support if the status does not change.',
     },
     {
       question: 'What payment methods do you accept?',
-      answer: 'We accept VISA, MASTER, MPU, WaveMoney, KBZPay, CBPay, and MABPay.',
+      answer: 'The payment page records your selected method and transfer reference for manual administrator verification. It does not process payments automatically.',
     },
   ],
   cancellation: [
