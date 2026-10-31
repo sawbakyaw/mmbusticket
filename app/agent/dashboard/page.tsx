@@ -6,9 +6,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { AgentLayout } from '@/components/agent-layout';
 import {
   TrendingUp, Bus, Ticket, DollarSign,
-  ArrowUpRight, Activity, Calendar, Search, MapPin, Users, Wallet, CreditCard
+  ArrowUpRight, Activity, Calendar, MapPin, Users, Wallet, CreditCard
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface AgentStats {
   totalBookings: number;
@@ -120,13 +119,6 @@ export default function AgentDashboardPage() {
             <h1 className="text-2xl font-bold text-white">Agent Dashboard</h1>
             <p className="text-slate-400">Welcome back! Start booking tickets for your customers.</p>
           </div>
-          <Link
-            href="/agent/search"
-            className="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 rounded-lg text-white font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <Search className="h-4 w-4" />
-            Book New Ticket
-          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -159,7 +151,7 @@ export default function AgentDashboardPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Today&apos;s Performance */}
           <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -179,31 +171,6 @@ export default function AgentDashboardPage() {
                 <span className="text-slate-400">Wallet Balance</span>
                 <span className="text-emerald-400 font-semibold">K {formatCurrency(stats?.walletBalance || 0)}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <Link
-                href="/agent/search"
-                className="block w-full py-2 px-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-300 hover:bg-green-500/20 text-center transition-colors"
-              >
-                Search & Book Tickets
-              </Link>
-              <Link
-                href="/agent/bookings"
-                className="block w-full py-2 px-4 bg-teal-500/10 border border-teal-500/20 rounded-xl text-teal-300 hover:bg-teal-500/20 text-center transition-colors"
-              >
-                View My Bookings
-              </Link>
-              <Link
-                href="/agent/wallet"
-                className="block w-full py-2 px-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-300 hover:bg-blue-500/20 text-center transition-colors"
-              >
-                Check Wallet
-              </Link>
             </div>
           </div>
 
@@ -228,14 +195,8 @@ export default function AgentDashboardPage() {
 
         {/* Recent Bookings */}
         <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50">
-          <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
+          <div className="p-6 border-b border-slate-700/50">
             <h3 className="text-lg font-semibold text-white">Recent Bookings</h3>
-            <Link
-              href="/agent/bookings"
-              className="text-sm text-green-400 hover:text-green-300 transition-colors"
-            >
-              View All →
-            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">

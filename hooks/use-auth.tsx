@@ -19,8 +19,8 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Public routes that don't require authentication
-const publicRoutes = ['/', '/search', '/trip', '/passenger', '/payment', '/confirmation', '/help', '/find-booking', '/login', '/signup', '/forgot-password'];
-const authRoutes = ['/login', '/signup', '/forgot-password'];
+const publicRoutes = ['/', '/search', '/trip', '/passenger', '/payment', '/confirmation', '/help', '/find-booking', '/login', '/signup'];
+const authRoutes = ['/login', '/signup'];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();

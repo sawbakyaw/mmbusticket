@@ -8,7 +8,6 @@ import {
   TrendingUp, TrendingDown, Users, Bus, Ticket, DollarSign,
   ArrowUpRight, ArrowDownRight, Activity, Calendar, MapPin, Clock
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface OperatorStats {
   totalBuses: number;
@@ -144,15 +143,6 @@ export default function OperatorDashboardPage() {
             <h1 className="text-2xl font-bold text-white">Operator Dashboard</h1>
             <p className="text-slate-400">Welcome back! Here&apos;s your fleet overview.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/operator/trips/new"
-              className="bg-gradient-to-r from-blue-500 to-cyan-600 px-4 py-2 rounded-lg text-white font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-            >
-              <Calendar className="h-4 w-4" />
-              Create Trip
-            </Link>
-          </div>
         </div>
 
         {/* Stats Cards */}
@@ -189,7 +179,7 @@ export default function OperatorDashboardPage() {
         )}
 
         {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Today&apos;s Performance */}
           <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -209,31 +199,6 @@ export default function OperatorDashboardPage() {
                 <span className="text-slate-400">Active Trips</span>
                 <span className="text-white font-semibold">{stats?.activeTrips || 0}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <Link
-                href="/operator/buses/new"
-                className="block w-full py-2 px-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-300 hover:bg-blue-500/20 text-center transition-colors"
-              >
-                Add New Bus
-              </Link>
-              <Link
-                href="/operator/trips/new"
-                className="block w-full py-2 px-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-300 hover:bg-cyan-500/20 text-center transition-colors"
-              >
-                Schedule Trip
-              </Link>
-              <Link
-                href="/operator/reports"
-                className="block w-full py-2 px-4 bg-teal-500/10 border border-teal-500/20 rounded-xl text-teal-300 hover:bg-teal-500/20 text-center transition-colors"
-              >
-                View Reports
-              </Link>
             </div>
           </div>
 
@@ -265,14 +230,8 @@ export default function OperatorDashboardPage() {
 
         {/* Recent Bookings */}
         <div className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50">
-          <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
+          <div className="p-6 border-b border-slate-700/50">
             <h3 className="text-lg font-semibold text-white">Recent Bookings</h3>
-            <Link
-              href="/operator/bookings"
-              className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              View All →
-            </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">

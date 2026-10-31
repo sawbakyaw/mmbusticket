@@ -223,13 +223,6 @@ export default function AdminDashboardPage() {
                   {pendingRefunds}
                 </span>
               </Link>
-              <Link
-                href="/admin/agents"
-                className="flex items-center justify-between rounded-xl border border-teal-300/15 bg-teal-300/[0.06] p-3.5 transition-colors hover:bg-teal-300/10"
-              >
-                <span className="text-sm font-medium text-teal-200">Agent Verifications</span>
-                <span className="rounded-lg bg-teal-300/15 px-2.5 py-1 text-sm font-semibold text-teal-100">0</span>
-              </Link>
             </div>
           </div>
 
@@ -238,16 +231,10 @@ export default function AdminDashboardPage() {
             <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <Link
-                href="/admin/operators/new"
+                href="/admin/operators"
                 className="block w-full rounded-xl border border-slate-700/80 px-4 py-2.5 text-center text-sm font-medium text-slate-200 transition-colors hover:border-amber-300/30 hover:bg-amber-300/[0.06] hover:text-amber-100"
               >
-                Add New Operator
-              </Link>
-              <Link
-                href="/admin/trips/new"
-                className="block w-full rounded-xl border border-slate-700/80 px-4 py-2.5 text-center text-sm font-medium text-slate-200 transition-colors hover:border-teal-300/30 hover:bg-teal-300/[0.06] hover:text-teal-100"
-              >
-                Create Trip
+                Manage Operators
               </Link>
               <Link
                 href="/admin/users"

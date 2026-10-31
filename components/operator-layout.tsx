@@ -3,22 +3,11 @@
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, Bus, Ticket, FileText, DollarSign, Wallet,
-  Settings, BarChart3, Bell, HelpCircle, LogOut, ChevronDown,
-  Calendar, MapPin, Menu, X, Users
-} from 'lucide-react';
+import { LayoutDashboard, Bus, Bell, HelpCircle, LogOut, ChevronDown, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 const sidebarLinks = [
   { href: '/operator/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/operator/buses', icon: Bus, label: 'My Buses' },
-  { href: '/operator/trips', icon: Calendar, label: 'Trips' },
-  { href: '/operator/routes', icon: MapPin, label: 'Routes' },
-  { href: '/operator/bookings', icon: Ticket, label: 'Bookings' },
-  { href: '/operator/reports', icon: BarChart3, label: 'Reports' },
-  { href: '/operator/wallet', icon: Wallet, label: 'Wallet' },
-  { href: '/operator/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function OperatorLayout({ children }: { children: React.ReactNode }) {
@@ -145,14 +134,6 @@ export function OperatorLayout({ children }: { children: React.ReactNode }) {
                       <p className="text-sm text-white">{user?.email}</p>
                       <p className="text-xs text-slate-400">{user?.role}</p>
                     </div>
-                    <Link
-                      href="/operator/profile"
-                      className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-700 transition-colors"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
                     <button
                       onClick={signOut}
                       className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-slate-700 transition-colors"

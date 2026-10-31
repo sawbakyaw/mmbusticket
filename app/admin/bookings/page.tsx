@@ -5,10 +5,9 @@ import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { BookingWithPayment } from '@/lib/types';
 import {
-  Search, Filter, Download, Eye, RefreshCw, XCircle,
+  Search, Filter, Download, RefreshCw, XCircle,
   CheckCircle, Clock, Ticket, TrendingUp
 } from 'lucide-react';
-import Link from 'next/link';
 
 const paymentColors: Record<string, string> = {
   paid: 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -198,19 +197,18 @@ export default function BookingsPage() {
                   <th className="px-6 py-4 font-medium">Amount</th>
                   <th className="px-6 py-4 font-medium">Payment</th>
                   <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                    <td colSpan={7} className="px-6 py-8 text-center text-slate-400">
                       Loading...
                     </td>
                   </tr>
                 ) : filteredBookings.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                    <td colSpan={7} className="px-6 py-8 text-center text-slate-400">
                       No bookings found
                     </td>
                   </tr>
@@ -253,16 +251,6 @@ export default function BookingsPage() {
                       </td>
                       <td className="px-6 py-4 text-slate-400 text-sm">
                         {new Date(booking.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href={`/admin/bookings/${booking.id}`}
-                            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </div>
                       </td>
                     </tr>
                   ))

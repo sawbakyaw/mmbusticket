@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, Bus, Ticket, CreditCard, Wallet,
-  Settings, BarChart3, Bell, HelpCircle, LogOut, ChevronDown,
-  Building2, UserCheck, FileText, Shield, Menu, X
+  BarChart3, Bell, HelpCircle, LogOut, ChevronDown,
+  FileText, Shield, Menu, X
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,7 +15,6 @@ const sidebarLinks = {
     { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/users', icon: Users, label: 'User Management' },
     { href: '/admin/operators', icon: Bus, label: 'Operators' },
-    { href: '/admin/agents', icon: UserCheck, label: 'Agents' },
     { href: '/admin/bookings', icon: Ticket, label: 'Bookings' },
     { href: '/admin/refunds', icon: FileText, label: 'Refunds' },
     { href: '/admin/wallets', icon: Wallet, label: 'Wallets' },
@@ -24,7 +23,7 @@ const sidebarLinks = {
     { href: '/admin/cms', icon: FileText, label: 'CMS' },
     { href: '/admin/notifications', icon: Bell, label: 'Notifications' },
     { href: '/admin/audit-logs', icon: Shield, label: 'Audit Logs' },
-    { href: '/admin/settings', icon: Settings, label: 'Settings' },
+
   ],
   admin: [
     { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -32,8 +31,7 @@ const sidebarLinks = {
     { href: '/admin/operators', icon: Bus, label: 'Operators' },
     { href: '/admin/bookings', icon: Ticket, label: 'Bookings' },
     { href: '/admin/refunds', icon: FileText, label: 'Refunds' },
-    { href: '/admin/reports', icon: BarChart3, label: 'Reports' },
-    { href: '/admin/settings', icon: Settings, label: 'Settings' },
+
   ],
 };
 
@@ -163,14 +161,6 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                       <p className="text-sm text-white">{user?.email}</p>
                       <p className="text-xs text-slate-400">{user?.role}</p>
                     </div>
-                    <Link
-                      href="/admin/profile"
-                      className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-700 transition-colors"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
                     <button
                       onClick={signOut}
                       className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-slate-700 transition-colors"
