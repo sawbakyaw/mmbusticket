@@ -48,6 +48,11 @@ export const translations = {
     // Popular Routes
     popularRoutes: 'Popular Routes',
     popularRoutesDesc: 'Discover the most traveled routes in Myanmar',
+    tripViews: 'views',
+    loadingViews: 'Loading views…',
+    viewsUnavailable: 'Views unavailable',
+    popularRoutesUnavailable: 'Popular routes could not be loaded.',
+    noPopularTrips: 'No scheduled trips are available right now.',
     fromPrice: 'From MMK',
 
     // Operators Section
@@ -215,6 +220,11 @@ export const translations = {
     // Popular Routes
     popularRoutes: 'လူကြိုက်များသောခရီးစဉ်များ',
     popularRoutesDesc: 'မြန်မာနိုင်ငံတွင် လူကြိုက်များသော ခရီးစဉ်များကို ရှာဖွေပါ',
+    tripViews: 'ကြည့်ရှုမှု',
+    loadingViews: 'ကြည့်ရှုမှုများ ရယူနေသည်…',
+    viewsUnavailable: 'ကြည့်ရှုမှု အချက်အလက် မရရှိနိုင်ပါ',
+    popularRoutesUnavailable: 'လူကြိုက်များသော ခရီးစဉ်များကို မရယူနိုင်ပါ။',
+    noPopularTrips: 'လတ်တလော ခရီးစဉ်များ မရှိသေးပါ။',
     fromPrice: 'စတင်ဈေး MMK',
 
     // Operators Section

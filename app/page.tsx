@@ -5,7 +5,7 @@ import { database } from '@/lib/db-client';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { SearchForm } from '@/components/search-form';
-import { Bus, CheckCircle2, Shield, Headphones, Users, Clock, MapPin } from 'lucide-react';
+import { Bus, CheckCircle2, Shield, Headphones, Users, Clock, MapPin, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -19,6 +19,7 @@ interface TripWithRoute {
   id: string;
   base_price: number;
   routes: {
+    id: string;
     from_city: { name: string }[] | { name: string };
     to_city: { name: string }[] | { name: string };
   } | null;
@@ -27,6 +28,9 @@ interface TripWithRoute {
 export default function HomePage() {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [popularTrips, setPopularTrips] = useState<TripWithRoute[]>([]);
+  const [tripViewCounts, setTripViewCounts] = useState<Record<string, number> | null>(null);
+  const [tripViewCountsLoaded, setTripViewCountsLoaded] = useState(false);
+  const [popularDataFailed, setPopularDataFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
@@ -64,19 +68,20 @@ export default function HomePage() {
   const fetchData = async () => {
     try {
       // Get operators with logos
-      const { data: operatorsData } = await database
+      const { data: operatorsData, error: operatorsError } = await database
         .from('operators')
         .select('id, name, logo_url')
         .eq('is_active', true)
         .limit(30);
 
       // Get popular routes with trips
-      const { data: tripsData } = await database
+      const { data: tripsData, error: tripsError } = await database
         .from('trips')
         .select(`
           id,
           base_price,
           routes (
+            id,
             from_city:from_city_id (name),
             to_city:to_city_id (name)
           )
@@ -84,10 +89,12 @@ export default function HomePage() {
         .eq('status', 'scheduled')
         .limit(8);
 
+      if (operatorsError || tripsError) throw new Error('Unable to load homepage data.');
       setOperators(operatorsData || []);
       setPopularTrips((tripsData as unknown as TripWithRoute[]) || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setPopularDataFailed(true);
     } finally {
       setLoading(false);
     }
@@ -101,9 +108,30 @@ export default function HomePage() {
       const from = Array.isArray(fromCity) ? fromCity[0]?.name || '' : fromCity?.name || '';
       const to = Array.isArray(toCity) ? toCity[0]?.name || '' : toCity?.name || '';
       const key = `${from}-${to}`;
-      return [key, { from, to, price: trip.base_price }];
+      return [key, { from, to, price: trip.base_price, routeId: trip.routes?.id }];
     })
   ).values()).slice(0, 4);
+  const popularRouteIds = uniqueRoutes.flatMap(route => route.routeId ? [route.routeId] : []).join(',');
+
+  useEffect(() => {
+    if (!popularRouteIds) return;
+    const fetchTripViews = async () => {
+      try {
+        const response = await fetch(`/api/trips/views?routeIds=${encodeURIComponent(popularRouteIds)}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load trip views.');
+        const result = await response.json();
+        setTripViewCounts(result.counts);
+      } catch (error) {
+        console.error('Error fetching trip views:', error);
+        setTripViewCounts(null);
+      } finally {
+        setTripViewCountsLoaded(true);
+      }
+    };
+    fetchTripViews();
+    const interval = setInterval(fetchTripViews, 15000);
+    return () => clearInterval(interval);
+  }, [popularRouteIds]);
 
   // Route images from Pexels (stock photos)
   const routeImages: Record<string, string> = {
@@ -200,11 +228,12 @@ export default function HomePage() {
                 <div key={i} className="bg-slate-800 rounded-xl animate-pulse h-48" />
               ))}
             </div>
-          ) : (
+          ) : uniqueRoutes.length ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {uniqueRoutes.map((route, index) => {
                 const imageKey = `${route.from}-${route.to}`;
                 const image = routeImages[imageKey] || routeImages['default'];
+                const viewCount = route.routeId ? tripViewCounts?.[route.routeId] : undefined;
                 return (
                   <Link
                     key={index}
@@ -224,14 +253,24 @@ export default function HomePage() {
                         <MapPin className="h-4 w-4 text-orange-400" />
                         <span className="font-semibold">{route.from} - {route.to}</span>
                       </div>
-                      <div className="text-teal-400 text-sm font-medium">
-                        From MMK {formatPrice(route.price)}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-teal-400 text-sm font-medium">
+                          From MMK {formatPrice(route.price)}
+                        </div>
+                        <div key={`${route.routeId}-${viewCount ?? 'loading'}`} className="animate-fade-in inline-flex items-center gap-1.5 text-slate-200 text-xs">
+                          <Eye className="h-3.5 w-3.5 text-teal-300" />
+                          {viewCount !== undefined ? `${viewCount} ${t('tripViews')}` : tripViewCountsLoaded ? t('viewsUnavailable') : t('loadingViews')}
+                        </div>
                       </div>
                     </div>
                   </Link>
                 );
               })}
             </div>
+          ) : (
+            <p className="text-center text-slate-400" role={popularDataFailed ? 'alert' : undefined}>
+              {popularDataFailed ? t('popularRoutesUnavailable') : t('noPopularTrips')}
+            </p>
           )}
         </div>
       </section>
