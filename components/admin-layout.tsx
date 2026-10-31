@@ -46,7 +46,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const links = sidebarLinks.super_admin; // TODO: Based on role
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#070b14] text-slate-100">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -57,21 +57,21 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 border-r border-slate-800 transform transition-transform duration-200 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#0b1220] border-r border-slate-800/80 shadow-2xl shadow-black/20 transform transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 p-4 border-b border-slate-800">
-          <div className="bg-gradient-to-br from-orange-500 to orange-600 p-2 rounded-lg">
+          <div className="bg-gradient-to-br from-orange-500 to-amber-400 p-2 rounded-xl shadow-lg shadow-orange-500/15">
             <Bus className="h-5 w-5 text-white" />
           </div>
           <div>
             <span className="text-lg font-bold text-white">Admin</span>
-            <span className="text-xs text-teal-400 block">Dashboard</span>
+            <span className="text-xs text-slate-500 block tracking-[0.18em] uppercase">Operations</span>
           </div>
           <button
-            className="lg:hidden p-2 ml-auto text-slate-400 hover:text-white"
+            className="ml-auto rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white lg:hidden"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -79,7 +79,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="max-h-[calc(100vh-10rem)] space-y-1 overflow-y-auto p-4">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -87,8 +87,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               onClick={() => setSidebarOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 pathname === link.href
-                  ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  ? 'bg-teal-400/10 text-teal-200 border border-teal-300/20 shadow-sm shadow-teal-950/30'
+                  : 'text-slate-400 border border-transparent hover:text-white hover:bg-slate-800/50'
               }`}
             >
               <link.icon className="h-5 w-5" />
@@ -112,11 +112,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-30 h-16 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
+        <header className="sticky top-0 z-30 h-16 bg-[#0b1220]/90 backdrop-blur-xl border-b border-slate-800/80">
           <div className="flex items-center justify-between h-full px-4 lg:px-6">
             {/* Menu button */}
             <button
-              className="lg:hidden p-2 text-slate-400 hover:text-white"
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white lg:hidden"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu className="h-6 w-6" />
@@ -134,7 +134,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             {/* Right side */}
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
+              <button className="relative rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-800/70 hover:text-white">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
               </button>
@@ -143,7 +143,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-3 p-2 hover:bg-slate-800 rounded-xl transition-colors"
+                  className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-slate-800/70"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-teal-500 flex items-center justify-center">
                     <span className="text-white text-sm font-bold">
@@ -158,7 +158,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-xl py-2 animate-slide-up">
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-slate-700/80 bg-[#111b2b] py-2 shadow-2xl shadow-black/30 animate-slide-up">
                     <div className="px-4 py-3 border-b border-slate-700">
                       <p className="text-sm text-white">{user?.email}</p>
                       <p className="text-xs text-slate-400">{user?.role}</p>
@@ -186,7 +186,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-5 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
