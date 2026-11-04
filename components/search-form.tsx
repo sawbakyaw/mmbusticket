@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MapPin, ArrowRight, ArrowLeftRight, Search, Globe } from 'lucide-react';
-import { database } from '@/lib/db-client';
-import { City } from '@/lib/types';
+import { MM_BUS_CITIES } from '@/lib/mm-bus-cities';
 import { useLanguage } from '@/hooks/use-language';
 import { format } from 'date-fns';
 
@@ -20,47 +19,16 @@ interface SearchFormProps {
 export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats = 1, initialForeigner = false, compact = false }: SearchFormProps) {
   const router = useRouter();
   const { t, language } = useLanguage();
-  const [cities, setCities] = useState<City[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cityLoadFailed, setCityLoadFailed] = useState(false);
+  const cities = MM_BUS_CITIES.map(city => ({ id: city.name, name: city.name, name_mm: city.nameMm }));
   const [isForeigner, setIsForeigner] = useState(initialForeigner);
   const [numberOfSeats, setNumberOfSeats] = useState(initialSeats);
 
-  const [fromCity, setFromCity] = useState(initialFrom || '');
-  const [toCity, setToCity] = useState(initialTo || '');
+  const [fromCity, setFromCity] = useState(initialFrom || 'Yangon');
+  const [toCity, setToCity] = useState(initialTo || 'Mandalay');
   const [departureDate, setDepartureDate] = useState(initialDate || format(new Date(), 'yyyy-MM-dd'));
 
   const minDate = format(new Date(), 'yyyy-MM-dd');
   const maxDate = format(new Date(Date.now() + 28 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
-
-  useEffect(() => {
-    async function fetchCities() {
-      try {
-        const { data, error } = await database
-          .from('cities')
-          .select('*')
-          .order('is_popular', { ascending: false })
-          .order('name', { ascending: true });
-
-        if (error) throw error;
-        setCities(data || []);
-
-        if (!initialFrom && data?.length) {
-          setFromCity('Yangon');
-        }
-        if (!initialTo && data?.length) {
-          setToCity('Mandalay');
-        }
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-        setCityLoadFailed(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCities();
-  }, [initialFrom, initialTo]);
 
   const swapCities = () => {
     const temp = fromCity;
@@ -83,8 +51,6 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
     router.push(`/search?${params.toString()}`);
   };
 
-  const popularCities = cities.filter(c => c.is_popular);
-
   if (compact) {
     return (
       <form onSubmit={handleSearch} className="bg-slate-900/60 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 md:p-4">
@@ -101,19 +67,11 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
               required
             >
               <option value="">{t('selectCity')}</option>
-              {popularCities.length > 0 && (
-                <optgroup label={language === 'my' ? 'လူကြိုက်များ' : 'Popular'}>
-                  {popularCities.map((city) => (
-                    <option key={city.id} value={city.name}>
-                      {city.name_mm || city.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+
               <optgroup label={language === 'my' ? 'မြို့အားလုံး' : 'All Cities'}>
                 {cities.map((city) => (
                   <option key={city.id} value={city.name}>
-                    {city.name_mm || city.name}
+                    {city.name}
                   </option>
                 ))}
               </optgroup>
@@ -141,19 +99,11 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
               required
             >
               <option value="">{t('selectCity')}</option>
-              {popularCities.length > 0 && (
-                <optgroup label={language === 'my' ? 'လူကြိုက်များ' : 'Popular'}>
-                  {popularCities.map((city) => (
-                    <option key={city.id} value={city.name}>
-                      {city.name_mm || city.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+
               <optgroup label={language === 'my' ? 'မြို့အားလုံး' : 'All Cities'}>
                 {cities.map((city) => (
                   <option key={city.id} value={city.name}>
-                    {city.name_mm || city.name}
+                    {city.name}
                   </option>
                 ))}
               </optgroup>
@@ -175,12 +125,6 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
               required
             />
           </div>
-
-          {cityLoadFailed && (
-          <p role="alert" className="text-sm text-amber-300">
-            {language === 'my' ? 'မြို့များကို မရယူနိုင်ပါ။ ခဏအကြာတွင် ပြန်ကြိုးစားပါ။' : 'Cities could not be loaded. Please try again later.'}
-          </p>
-        )}
 
         {/* Search Button */}
         <button
@@ -237,19 +181,11 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
               required
             >
               <option value="">{language === 'my' ? 'ထွက်ရာမြို့ရွေးပါ' : 'Select departure city'}</option>
-              {popularCities.length > 0 && (
-                <optgroup label={language === 'my' ? 'လူကြိုက်များ' : 'Popular'}>
-                  {popularCities.map((city) => (
-                    <option key={city.id} value={city.name}>
-                      {city.name_mm || city.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+
               <optgroup label={language === 'my' ? 'မြို့အားလုံး' : 'All Cities'}>
                 {cities.map((city) => (
                   <option key={city.id} value={city.name}>
-                    {city.name_mm || city.name}
+                    {city.name}
                   </option>
                 ))}
               </optgroup>
@@ -287,19 +223,11 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
               required
             >
               <option value="">{language === 'my' ? 'ရောက်ရာမြို့ရွေးပါ' : 'Select arrival city'}</option>
-              {popularCities.length > 0 && (
-                <optgroup label={language === 'my' ? 'လူကြိုက်များ' : 'Popular'}>
-                  {popularCities.map((city) => (
-                    <option key={city.id} value={city.name}>
-                      {city.name_mm || city.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+
               <optgroup label={language === 'my' ? 'မြို့အားလုံး' : 'All Cities'}>
                 {cities.map((city) => (
                   <option key={city.id} value={city.name}>
-                    {city.name_mm || city.name}
+                    {city.name}
                   </option>
                 ))}
               </optgroup>
@@ -345,16 +273,10 @@ export function SearchForm({ initialFrom, initialTo, initialDate, initialSeats =
           </div>
         </div>
 
-        {cityLoadFailed && (
-          <p role="alert" className="text-sm text-amber-300">
-            {language === 'my' ? 'မြို့များကို မရယူနိုင်ပါ။ ခဏအကြာတွင် ပြန်ကြိုးစားပါ။' : 'Cities could not be loaded. Please try again later.'}
-          </p>
-        )}
-
         {/* Search Button */}
         <button
           type="submit"
-          disabled={loading || !fromCity || !toCity}
+          disabled={!fromCity || !toCity}
           className="w-full btn-primary rounded-xl py-4 sm:py-5 text-base sm:text-lg font-semibold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Search className="h-5 w-5" />
