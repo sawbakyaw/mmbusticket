@@ -202,7 +202,7 @@ export default function FindBookingPage() {
 
           {/* Help Link */}
           <div className="mt-8 text-center">
-            <p className="text-slate-400 mb-2">Can't find your booking?</p>
+            <p className="text-slate-400 mb-2">Can&apos;t find your booking?</p>
             <Link
               href="/help"
               className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 transition-colors"

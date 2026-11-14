@@ -117,6 +117,15 @@ function SeatSelectionPage() {
 
   useEffect(() => {
     if (!tripId) return;
+    fetch('/api/trips/views', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tripId }),
+    }).catch(error => console.error('Error recording trip view:', error));
+  }, [tripId]);
+
+  useEffect(() => {
+    if (!tripId) return;
     const refreshSeats = async () => {
       const response = await fetch(`/api/trips/${encodeURIComponent(tripId)}/seats`);
       if (!response.ok) return;

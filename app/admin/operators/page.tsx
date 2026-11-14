@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { database } from '@/lib/db-client';
 import { AdminLayout } from '@/components/admin-layout';
 import { Operator, Bus, Trip } from '@/lib/types';
-import { Search, Plus, Edit2, Trash2, Bus as BusIcon, Users, Calendar, DollarSign, Eye } from 'lucide-react';
-import Link from 'next/link';
+import { Search, Bus as BusIcon, Users, Calendar, DollarSign } from 'lucide-react';
 
 export default function OperatorsPage() {
   const [loading, setLoading] = useState(true);
@@ -69,13 +68,6 @@ export default function OperatorsPage() {
             <h1 className="text-2xl font-bold text-white">Operators</h1>
             <p className="text-slate-400">Manage bus operators and their fleets</p>
           </div>
-          <Link
-            href="/admin/operators/new"
-            className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Operator
-          </Link>
         </div>
 
         {/* Search */}
@@ -166,26 +158,6 @@ export default function OperatorsPage() {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="p-4 border-t border-slate-700/50 flex items-center gap-2">
-                  <Link
-                    href={`/admin/operators/${operator.id}`}
-                    className="flex-1 py-2 text-center bg-teal-500/10 text-teal-400 rounded-lg hover:bg-teal-500/20 transition-colors text-sm"
-                  >
-                    <Eye className="h-4 w-4 inline mr-1" />
-                    View
-                  </Link>
-                  <Link
-                    href={`/admin/operators/${operator.id}/edit`}
-                    className="flex-1 py-2 text-center bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors text-sm"
-                  >
-                    <Edit2 className="h-4 w-4 inline mr-1" />
-                    Edit
-                  </Link>
-                  <button className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             ))}
           </div>

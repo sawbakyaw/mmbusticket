@@ -41,6 +41,14 @@ psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/migratio
 
 It adds booking status and schedule alias fields, guest passenger and payment tables, indexes, and the atomic `create_guest_booking` function. It does not replace the existing booking, seat-lock, or trip tables.
 
+Apply the trip-view migration after the base schema has created the `trips` table:
+
+```bash
+psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/migrations/202610310001_trip_views.sql
+```
+
+It creates the table used to count one view per trip and anonymous browser.
+
 Create the first administrator on a machine that can reach the database and has the project dependencies installed. Set `DATABASE_URL` in that machine's protected environment, then run:
 
 ```bash

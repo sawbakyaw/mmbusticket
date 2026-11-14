@@ -3,21 +3,11 @@
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, Bus, Ticket, FileText, DollarSign, Wallet,
-  Settings, BarChart3, Bell, HelpCircle, LogOut, ChevronDown,
-  Calendar, MapPin, Menu, X, Users, TrendingUp, CreditCard
-} from 'lucide-react';
+import { LayoutDashboard, Bell, HelpCircle, LogOut, ChevronDown, Menu, X, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const sidebarLinks = [
   { href: '/agent/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/agent/search', icon: Bus, label: 'Search Trips' },
-  { href: '/agent/bookings', icon: Ticket, label: 'My Bookings' },
-  { href: '/agent/commissions', icon: TrendingUp, label: 'Commissions' },
-  { href: '/agent/wallet', icon: Wallet, label: 'Wallet' },
-  { href: '/agent/reports', icon: BarChart3, label: 'Reports' },
-  { href: '/agent/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function AgentLayout({ children }: { children: React.ReactNode }) {
@@ -144,14 +134,6 @@ export function AgentLayout({ children }: { children: React.ReactNode }) {
                       <p className="text-sm text-white">{user?.email}</p>
                       <p className="text-xs text-slate-400">{user?.role}</p>
                     </div>
-                    <Link
-                      href="/agent/profile"
-                      className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-700 transition-colors"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
                     <button
                       onClick={signOut}
                       className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-slate-700 transition-colors"

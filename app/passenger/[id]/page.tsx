@@ -247,7 +247,7 @@ function PassengerFormPage() {
                       <p className="text-red-400 text-sm mt-1">{errors.phone}</p>
                     )}
                     <p className="text-slate-500 text-xs mt-1">
-                      We'll send booking confirmation and e-ticket to this number via SMS
+                      Use this number to look up your booking and receive support.
                     </p>
                   </div>
 

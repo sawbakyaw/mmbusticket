@@ -19,7 +19,7 @@ export const translations = {
 
     // Trust Badges
     preferredSeat: 'Get Your Preferred Seat',
-    instantConfirmation: 'Instant Confirmation',
+    instantConfirmation: 'Booking confirmation after review',
     overOperators: 'Over 100 Operators',
     support247: '24/7 Support',
 
@@ -39,15 +39,20 @@ export const translations = {
     operatorsTitle: '100+ Bus Operators',
     operatorsDesc: 'Choose from 100+ major bus operators covering 200 destinations.',
     instantBookingTitle: 'Instant Booking',
-    instantBookingDesc: 'Book your trip in less than 3 minutes. Instant confirmation after payment.',
-    securePaymentTitle: 'Secure Payment',
-    securePaymentDesc: 'Pay with VISA, MASTER, MPU, WaveMoney, KBZPay and more.',
+    instantBookingDesc: 'Submit your booking and payment reference for administrator review.',
+    securePaymentTitle: 'Manual Payment Review',
+    securePaymentDesc: 'Submit your transfer reference. An administrator verifies payment before confirmation.',
     helpTitle: 'Help 24/7',
     helpDesc: 'Our support center is available 24/7 for your questions and concerns.',
 
     // Popular Routes
     popularRoutes: 'Popular Routes',
     popularRoutesDesc: 'Discover the most traveled routes in Myanmar',
+    tripViews: 'views',
+    loadingViews: 'Loading views…',
+    viewsUnavailable: 'Views unavailable',
+    popularRoutesUnavailable: 'Popular routes could not be loaded.',
+    noPopularTrips: 'No scheduled trips are available right now.',
     fromPrice: 'From MMK',
 
     // Operators Section
@@ -55,7 +60,7 @@ export const translations = {
     operatorsSectionDesc: 'Trusted operators for your journey',
 
     // Payment Methods
-    weAccept: 'We Accept',
+    weAccept: 'Payment submission requires administrator verification',
 
     // FAQ
     haveQuestions: 'Have Questions?',
@@ -133,7 +138,7 @@ export const translations = {
     emailOrPhone: 'Email or Phone',
     password: 'Password',
     confirmPassword: 'Confirm Password',
-    forgotPassword: 'Forgot Password?',
+    forgotPassword: 'Need help signing in?',
     createAccount: 'Create Account',
     alreadyHaveAccount: 'Already have an account?',
     dontHaveAccount: "Don't have an account?",
@@ -186,7 +191,7 @@ export const translations = {
 
     // Trust Badges
     preferredSeat: 'နှစ်သက်ရာနေရာရယူပါ',
-    instantConfirmation: 'ချက်ခြင်းအတည်ပြုချက်',
+    instantConfirmation: 'စစ်ဆေးပြီးနောက် အတည်ပြုချက်',
     overOperators: 'Operator ၁၀၀ကျော်',
     support247: '24/7 ပံ့ပိုးမှု',
 
@@ -206,15 +211,20 @@ export const translations = {
     operatorsTitle: 'ဘတ်စ်ကားCompany ၁၀၀ကျော်',
     operatorsDesc: 'နိုင်ငံအနှံ့မြို့နေရာ ၂၀၀ကျော်ကို ဘတ်စ်ကားCompany ၁၀၀ကျော်မှ ရွေးချယ်ပါ။',
     instantBookingTitle: 'ချက်ခြင်းBooking',
-    instantBookingDesc: '၃ မိနစ်အောက်တွင် Bookingပြုလုပ်နိုင်ပါသည်။ Paymentပြီးတာနှင့် Confirmation။',
-    securePaymentTitle: 'လုံခြုံသောPayment',
-    securePaymentDesc: 'VISA, MASTER, MPU, WaveMoney, KBZPay စသည်ဖြင့် Paymentပြုလုပ်နိုင်ပါသည်။',
+    instantBookingDesc: 'Booking နှင့် ငွေလွှဲအချက်အလက်ကို တင်ပြပြီး စီမံခန့်ခွဲသူ စစ်ဆေးမှုကို စောင့်ပါ။',
+    securePaymentTitle: 'ငွေပေးချေမှု စစ်ဆေးခြင်း',
+    securePaymentDesc: 'ငွေလွှဲအချက်အလက်ကို တင်ပြပါ။ အတည်ပြုမီ စီမံခန့်ခွဲသူမှ စစ်ဆေးပါမည်။',
     helpTitle: '၂၄နာရီပံ့ပိုးမှု',
     helpDesc: 'သင့်မေးမြန်းချက်များနှင့် ပြဿနာများအတွက် ၂၄နာရီ ပံ့ပိုးပေးပါသည်။',
 
     // Popular Routes
     popularRoutes: 'လူကြိုက်များသောခရီးစဉ်များ',
     popularRoutesDesc: 'မြန်မာနိုင်ငံတွင် လူကြိုက်များသော ခရီးစဉ်များကို ရှာဖွေပါ',
+    tripViews: 'ကြည့်ရှုမှု',
+    loadingViews: 'ကြည့်ရှုမှုများ ရယူနေသည်…',
+    viewsUnavailable: 'ကြည့်ရှုမှု အချက်အလက် မရရှိနိုင်ပါ',
+    popularRoutesUnavailable: 'လူကြိုက်များသော ခရီးစဉ်များကို မရယူနိုင်ပါ။',
+    noPopularTrips: 'လတ်တလော ခရီးစဉ်များ မရှိသေးပါ။',
     fromPrice: 'စတင်ဈေး MMK',
 
     // Operators Section
@@ -222,7 +232,7 @@ export const translations = {
     operatorsSectionDesc: 'ယုံကြည်စိတ်ချရသောCompanyများ',
 
     // Payment Methods
-    weAccept: 'လက်ခံသောPaymentများ',
+    weAccept: 'ငွေပေးချေမှုကို စီမံခန့်ခွဲသူမှ စစ်ဆေးပြီးမှ အတည်ပြုပါမည်',
 
     // FAQ
     haveQuestions: 'မေးခွန်းရှိပါသလား?',
@@ -300,7 +310,7 @@ export const translations = {
     emailOrPhone: 'အီးမေး သို့ ဖုန်း',
     password: 'လျှို့ဝှက်စကား',
     confirmPassword: 'လျှို့ဝှက်စကားပြန်ထည့်ပါ',
-    forgotPassword: 'လျှို့ဝှက်စကားမေ့နေပါသလား?',
+    forgotPassword: 'အကောင့်ဝင်ရန် အကူအညီလိုပါသလား?',
     createAccount: 'အကောင့်ဖန်တီးပါ',
     alreadyHaveAccount: 'အကောင့်ရှိပြီးသားလား?',
     dontHaveAccount: 'အကောင့်မရှိသေးဘူးလား?',

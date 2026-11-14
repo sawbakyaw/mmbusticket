@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'MM-BusTicket Pro - Online Bus Ticket Booking',
-  description: 'Book bus tickets online with MM-BusTicket Pro. Real-time seat selection, multiple operators, and secure payments.',
+  description: 'Book bus tickets online with MM-BusTicket Pro. Select seats and submit payment references for administrator verification.',
 };
 
 export default function RootLayout({

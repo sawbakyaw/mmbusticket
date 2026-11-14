@@ -113,14 +113,6 @@ export function Footer() {
             <p className="text-slate-500 text-sm text-center md:text-left">
               &copy; {new Date().getFullYear()} MM-BusTicket Pro. {language === 'my' ? 'မူပိုင်ခွင့်အားလုံးရှိသည်။' : 'All rights reserved.'}
             </p>
-            <div className="flex items-center gap-4 md:gap-6">
-              <Link href="/help" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
-                {t('privacyPolicy')}
-              </Link>
-              <Link href="/help" className="text-slate-500 hover:text-slate-300 text-sm transition-colors">
-                {t('termsConditions')}
-              </Link>
-            </div>
           </div>
         </div>
       </div>
