@@ -1,82 +1,99 @@
-# PostgreSQL setup for MM-BusTicket
+# MM-BusTicket database setup
 
-This project connects to PostgreSQL from Next.js API routes. The database URL is server-only; never expose it as a `NEXT_PUBLIC_` variable or connect to PostgreSQL from browser code.
+This project uses PostgreSQL through the Next.js server and the `pg` package. Supabase can host the PostgreSQL database, but the app does not use Supabase Auth or the Supabase JavaScript client for its database connection. Keep the database connection string server-side. Never name it `NEXT_PUBLIC_DATABASE_URL` or put it in browser code.
 
-## 1. Install PostgreSQL on the VPS
+## What you need
 
-Use a supported Linux VPS and install PostgreSQL 16 or newer. Keep PostgreSQL on a private interface. If the Next.js app runs on the same VPS, bind Postgres to `127.0.0.1` and do not open port 5432 in the public firewall. If the app runs in a separate environment, use a private network/VPN or restrict TLS database access to a known application-server IP. Do not expose port 5432 to the whole internet.
+- Access to a Supabase project, or a reachable PostgreSQL 16+ server.
+- The database password and connection details for that database.
+- The project files `database/schema.sql`, `database/seed.sql`, and `database/migrations/202606280001_guest_checkout.sql`.
 
-Create an application role and database from the VPS terminal:
+The Supabase publishable/anon key and service-role/secret key are not database passwords and are not needed by this app's PostgreSQL connection.
 
-```bash
-sudo -u postgres psql
-```
+## 1. Create a Supabase project
 
-In the PostgreSQL prompt, replace the example password with a long unique secret:
+1. In Supabase, create a new project in the organization where you want to keep this database.
+2. Choose a project name and a region close to the application server.
+3. Set a strong database password. Save it in a password manager; Supabase will not show it again in plain text. This is the PostgreSQL password, not an API key.
+4. Wait for the project and database to finish provisioning.
+5. In the project settings, find the database connection details. For an app server that connects over IPv4 or does not have a fixed outbound IP, use the **Transaction pooler** connection string. Note its host, port, database name, and username. Supabase pooler usernames commonly include the project reference after `postgres.`.
 
-```sql
-CREATE ROLE mmbus_app LOGIN PASSWORD 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD';
-CREATE DATABASE mmbusticket OWNER mmbus_app;
-\q
-```
+Do not make the database publicly accessible to all IP addresses just to make a connection work. Use the provider's pooler and network access controls appropriate to your hosting environment.
 
-Keep the password in a password manager or protected deployment secret; do not commit it or paste it into browser-visible settings.
+## 2. Create the application schema
 
-## 2. Create the tables and starter cities
+Use the Supabase SQL Editor for the new project. Run the following project files in this order, one at a time:
 
-Copy `database/schema.sql`, `database/seed.sql`, and `database/migrations/202606280001_guest_checkout.sql` to the VPS using your normal private file-transfer method. Run them as the database owner:
+1. Open `database/schema.sql`, copy its complete contents into a new SQL Editor query, and run it. This creates the app tables, indexes, roles, and seat-management functions.
+2. Open `database/seed.sql`, copy its complete contents into a new query, and run it. This adds starter city names only.
+3. Open `database/migrations/202606280001_guest_checkout.sql`, copy its complete contents into a new query, and run it. This adds guest-checkout fields, passenger/payment tables, and the booking function.
 
-```bash
-psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/schema.sql
-psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/seed.sql
-```
+Run these against a fresh project database before connecting the app. Do not run the files in `supabase/migrations/` as an additional setup sequence; the three files above are the database setup sequence maintained for this app. Do not run `DROP` or reset commands against a database that contains data you need to keep.
 
-`-W` prompts for the password rather than embedding it in the command. The schema creates the app's base tables, indexes, role records, and seat-lock functions. The seed file inserts starter city names only; add real operators, buses, routes, trips, and seats before offering tickets.
+After setup, open the SQL Editor and verify the `cities`, `operators`, `routes`, `trips`, `seats`, and `bookings` tables exist. The seed inserts city names only, so an empty operators or trips section is expected until you add operator, bus, route, trip, and seat records.
 
-Apply the additive guest-checkout migration on both a fresh database and an existing database with the base schema:
+## 3. Configure the app's database connection
 
-```bash
-psql "postgresql://mmbus_app@127.0.0.1:5432/mmbusticket" -W -f database/migrations/202606280001_guest_checkout.sql
-```
-
-It adds booking status and schedule alias fields, guest passenger and payment tables, indexes, and the atomic `create_guest_booking` function. It does not replace the existing booking, seat-lock, or trip tables.
-
-Create the first administrator on a machine that can reach the database and has the project dependencies installed. Set `DATABASE_URL` in that machine's protected environment, then run:
-
-```bash
-npm run create-admin
-```
-
-The script asks for the admin email, display name, and password. Use a unique password of at least 12 characters. Do not expose this administrator to the public until you have changed any demo data and tested access.
-
-## 3. Connect the live workspace
-
-In the Builder workspace's server environment settings, add:
+Build the connection string using the values from your Supabase project's Transaction pooler details. Its shape is:
 
 ```text
-DATABASE_URL=postgresql://mmbus_app:<password>@<database-host>:5432/mmbusticket
+postgresql://<pooler-username>:<URL-ENCODED-DATABASE-PASSWORD>@<pooler-host>:6543/postgres?pgbouncer=true
+```
+
+Replace every placeholder with the values for your project. URL-encode reserved characters in the password (for example, `@`, `:`, `/`, `?`, `#`, and `%`) before putting it in the URI. Do not include angle brackets in the final value.
+
+Set these server-side variables:
+
+```text
+DATABASE_URL=<your-complete-pooler-connection-string>
 DATABASE_SSL=true
 ```
 
-Use the actual VPS hostname and password. Keep `DATABASE_URL` private—never prefix it with `NEXT_PUBLIC_`. Set `DATABASE_SSL=true` only when PostgreSQL has a valid TLS certificate trusted by the Node.js runtime. For local development against Postgres on the same machine, use `DATABASE_SSL=false`.
+### Local development
 
-The workspace's server runtime must be able to reach the VPS. Prefer a private network or a firewall allowlist for a fixed app-server egress IP. If Builder's live runtime has no fixed egress IP, do not open PostgreSQL broadly; deploy the Next.js server beside PostgreSQL or provide a private network/API gateway first. After changing workspace environment variables, rebuild/restart the live app so the API routes receive the new settings.
+1. In the repository root, create or update `.env.local` (it is ignored by Git).
+2. Add `DATABASE_URL` and `DATABASE_SSL=true` there. Do not commit the file or share its contents in chat or screenshots.
+3. Restart the local Next.js development server so it reloads the environment.
+4. Keep the real database password only in this local file or a protected secret manager.
 
-For local development, copy `.env.example` to `.env.local`, set `DATABASE_URL`, then run `npm run dev`.
+### Builder-hosted runtime
+
+Add `DATABASE_URL` and `DATABASE_SSL=true` in the project's secure server environment settings. Do not rely on `.env` or `.env.local` being deployed; local environment files are not a substitute for hosted runtime variables. Rebuild or restart the hosted app after changing them so the server receives the new settings.
 
 ## 4. Verify the connection
 
-1. Confirm the database is reachable from the Next.js server—not just from your laptop.
-2. Open the home page and confirm the city selector loads.
-3. Add a test operator, bus, route, trip, and seats; verify search and seat selection.
-4. Open the same trip in two browser sessions and verify a seat lock prevents the second session from reserving the same seat.
-5. Complete a guest booking without signing in and confirm `bookings`, `passengers`, and an initial pending `payments` row are created together.
-6. Submit a test transaction reference, retrieve the booking with both its reference and matching passenger phone, then verify/reject it from the admin bookings page.
-7. Confirm that only administrator sessions can verify payments and that guest payment submission never marks a booking paid by itself.
-8. Create a regular customer account and the admin account; verify admin pages reject the customer account.
+1. Start the app with `npm run dev` locally, or open the rebuilt hosted app.
+2. Open the home page and check that the city selector can load the seeded cities without a database error.
+3. In the browser's developer tools, inspect the Network request to `/api/data`. A successful public `cities` read should return HTTP 200. A missing `DATABASE_URL` returns HTTP 503; a connection or schema failure may return HTTP 500.
+4. Add test operator, bus, route, trip, and seat records using the app's admin workflow or trusted SQL. The seed file does not create these records.
+5. Test trip search and seat selection with test data before enabling real bookings.
 
-Seat availability refreshes by polling the API; it does not use PostgreSQL's native push/realtime feature. Guest payment submissions store the method and transaction reference for manual administrator verification; there is no payment-gateway integration or automatic payment verification.
+Create the first administrator only after the schema is installed and the server can reach the database. Set `DATABASE_URL` and `DATABASE_SSL` in the terminal environment used for the command, then run `npm run create-admin`. The script prompts for the admin email, name, and password; use a unique password of at least 12 characters. Do not place an administrator password in source control or a public environment variable.
 
-## 5. Backups and operation
+## 5. Troubleshooting
 
-Schedule encrypted, off-VPS backups of the database and test restoring one before storing real passenger data. Keep PostgreSQL and the operating system updated, limit database roles and firewall access, monitor disk space, and rotate credentials if they are exposed. Do not use production passenger data in the live preview environment.
+| Symptom | Check |
+| --- | --- |
+| `/api/data` returns 503 with `DATABASE_URL is not configured.` | Add `DATABASE_URL` to the environment of the running server and restart/rebuild it. |
+| `/api/data` returns 500 `Database request failed.` | Check the pooler host, username, port, database password, network access, and that the schema files ran successfully. Confirm the password is URL-encoded in the connection string. |
+| Authentication error from PostgreSQL | The database password or pooler username is wrong. Use the database password and exact username shown in the project's pooler connection details; API keys will not work here. |
+| TLS or certificate error | Keep `DATABASE_SSL=true` for Supabase. Verify the configured host is the provider's pooler host and that the runtime trusts its certificate. |
+| Error says a relation/table does not exist | Run `database/schema.sql`, `database/seed.sql`, and the guest-checkout migration in the order above. |
+| Cities load but operators/routes/trips are empty | This is expected after the starter seed; add the corresponding records before testing route search. |
+| Local app works but hosted app fails | Configure the variables in the hosted server environment, not only in `.env.local`, and confirm the hosted runtime can reach the database. |
+
+The API intentionally returns a generic database error to browsers rather than exposing database credentials or internal connection details. Use the server runtime logs to investigate further, and never paste a full connection string into public logs or support messages.
+
+## Optional: self-hosted PostgreSQL
+
+If PostgreSQL is installed on a private VPS instead of Supabase, use PostgreSQL 16 or newer. Keep it on a private interface; do not expose port 5432 to the public internet. Create a dedicated application role and database, run the same three SQL files above as the database owner, and set `DATABASE_URL` to the private host and database. Enable `DATABASE_SSL=true` only when the server has a valid TLS certificate trusted by the Node.js runtime; for local development against a local PostgreSQL instance, use `DATABASE_SSL=false`.
+
+Use a private network, VPN, or a strict firewall allowlist between the application and database. If the hosted app has no stable outbound IP, do not open PostgreSQL to all addresses; use a supported pooler/network path or host the app and database within a reachable private network.
+
+## Operations and safety
+
+- Use a separate database and credentials for development and production.
+- Back up the database regularly and test restoring a backup before storing real passenger data.
+- Limit database and administrator access; rotate credentials if exposed.
+- Keep production passenger data out of preview and test environments.
+- Seat availability is refreshed by API polling; PostgreSQL realtime is not used. Guest payment submissions are recorded for manual administrator verification and do not automatically mark a booking as paid.
